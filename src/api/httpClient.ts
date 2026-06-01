@@ -35,9 +35,24 @@ export class HttpClient {
   }
 
   private async safeMessage(response: Response) {
+    if (response.status >= 500) {
+      return 'El servidor no pudo completar la solicitud. Intenta nuevamente.';
+    }
     try {
       const body = (await response.json()) as { message?: unknown };
-      return typeof body.message === 'string' ? body.message : 'Solicitud rechazada.';
+      if (typeof body.message === 'string') {
+        return body.message;
+      }
+      if (Array.isArray(body.message)) {
+        return body.message.filter((item) => typeof item === 'string').join(' ');
+      }
+      if (response.status === 409) {
+        return 'Ya existe una cuenta con ese correo.';
+      }
+      if (response.status === 400) {
+        return 'Revisa los datos ingresados.';
+      }
+      return 'Solicitud rechazada.';
     } catch {
       return 'No fue posible procesar la respuesta del servidor.';
     }

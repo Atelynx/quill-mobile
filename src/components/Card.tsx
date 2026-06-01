@@ -1,15 +1,18 @@
 import type { PropsWithChildren } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { colors } from '../constants/colors';
+import { useTheme } from '../theme/ThemeContext';
+import type { ThemeTokens } from '../theme/palette';
 
-export const Card = ({ children }: PropsWithChildren) => (
-  <View style={styles.card}>{children}</View>
-);
+export const Card = ({ children }: PropsWithChildren) => {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
+  return <View style={styles.card}>{children}</View>;
+};
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ThemeTokens) => StyleSheet.create({
   card: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
+    backgroundColor: theme.surface,
+    borderColor: theme.border,
     borderRadius: 8,
     borderWidth: 1,
     marginBottom: 12,

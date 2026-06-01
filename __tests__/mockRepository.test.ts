@@ -15,4 +15,16 @@ describe('MockRepository', () => {
     expect(orders[0]._id).toBe(created._id);
     expect(orders[0].status).toBe('PENDING');
   });
+
+  it('simula registro y expone historial de mercado', async () => {
+    const repository = new MockRepository();
+
+    await expect(repository.register({
+      fullName: 'Nueva Persona',
+      email: 'nueva@quill.local',
+      password: 'Demo123456!',
+    })).resolves.toMatchObject({ email: 'nueva@quill.local' });
+
+    await expect(repository.getMarketHistory('COPEC.SN', 4)).resolves.toHaveLength(4);
+  });
 });

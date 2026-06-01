@@ -16,6 +16,17 @@ export interface AuthSession {
   user: UserProfile;
 }
 
+export interface RegisterInput {
+  fullName: string;
+  email: string;
+  password: string;
+}
+
+export interface RegisterResult {
+  message: string;
+  email: string;
+}
+
 export interface StockQuote {
   symbol: string;
   name: string;
@@ -23,6 +34,12 @@ export interface StockQuote {
   close: number;
   previousClose: number;
   dayChangePercentage: number;
+}
+
+export interface PricePoint {
+  symbol: string;
+  price: number;
+  createdAt: string;
 }
 
 export interface PortfolioPosition {
@@ -75,6 +92,8 @@ export interface CurrencyRate {
   rate: number;
   basePrice: number;
   dayChangePercentage: number;
+  estimated?: boolean;
+  message?: string;
 }
 
 export interface CreateOrderInput {

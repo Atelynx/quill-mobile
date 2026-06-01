@@ -6,7 +6,7 @@ const baseSchema = z.object({
   side: z.enum(['BUY', 'SELL']),
   type: z.enum(['LIMIT', 'MARKET']),
   quantity: z.coerce.number().int('Usa una cantidad entera.').positive(),
-  limitPrice: z.coerce.number().positive().optional(),
+  limitPrice: z.coerce.number().positive('Ingresa un precio límite válido.').optional(),
 });
 
 export type OrderValidationResult =

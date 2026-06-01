@@ -14,11 +14,12 @@ describe('realtime updates', () => {
   });
 
   it('actualiza la tasa USDCLP cuando llega evento forex', () => {
-    const updated = applyCurrencyUpdate(demoCurrencyRate, {
+    const updated = applyCurrencyUpdate({ ...demoCurrencyRate, estimated: true }, {
       symbol: 'USDCLP',
       price: 940,
     });
 
     expect(updated.rate).toBe(940);
+    expect(updated.estimated).toBe(false);
   });
 });

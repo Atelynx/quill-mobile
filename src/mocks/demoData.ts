@@ -10,7 +10,7 @@ import type {
 export const demoUser: UserProfile = {
   id: 'demo-user',
   fullName: 'Usuario Demo',
-  email: 'demo@quill.cl',
+  email: 'demo@quill.local',
   availableBalance: 7425000,
   reservedBalance: 320000,
 };

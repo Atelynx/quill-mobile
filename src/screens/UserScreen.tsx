@@ -1,14 +1,19 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Card } from '../components/Card';
 import { StatusBanner } from '../components/StatusBanner';
-import { colors } from '../constants/colors';
+import { ThemeSelector } from '../components/ThemeSelector';
 import { useAsyncResource } from '../hooks/useAsyncResource';
 import { useAppSession } from '../state/AppSessionContext';
-import { layoutStyles } from '../styles/layout';
+import { useLayoutStyles } from '../styles/layout';
+import { useTheme } from '../theme/ThemeContext';
+import type { ThemeTokens } from '../theme/palette';
 import { formatMoney } from '../utils/money';
 
 export const UserScreen = () => {
   const session = useAppSession();
+  const layoutStyles = useLayoutStyles();
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const status = useAsyncResource(
     () => session.repository.getConnectionStatus(),
     [session.repository],
@@ -35,6 +40,11 @@ export const UserScreen = () => {
           El modo backend usa JWT Bearer en memoria y endpoints REST bajo la URL configurada.
         </Text>
       </Card>
+      <Card>
+        <Text style={styles.section}>Tema</Text>
+        <Text style={styles.copy}>El tema seleccionado se conserva en este dispositivo.</Text>
+        <ThemeSelector />
+      </Card>
       <Pressable accessibilityRole="button" onPress={session.logout} style={styles.button}>
         <Text style={styles.buttonText}>Cerrar sesión</Text>
       </Pressable>
@@ -43,20 +53,28 @@ export const UserScreen = () => {
 };
 
 const Metric = ({ label, value }: { label: string; value: string }) => (
-  <View style={styles.metric}>
-    <Text style={styles.email}>{label}</Text>
-    <Text style={styles.value}>{value}</Text>
-  </View>
+  <MetricContent label={label} value={value} />
 );
 
-const styles = StyleSheet.create({
-  name: { color: colors.text, fontSize: 20, fontWeight: '800' },
-  email: { color: colors.muted, marginTop: 4 },
-  divider: { backgroundColor: colors.border, height: 1, marginVertical: 14 },
+const MetricContent = ({ label, value }: { label: string; value: string }) => {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
+  return (
+    <View style={styles.metric}>
+      <Text style={styles.email}>{label}</Text>
+      <Text style={styles.value}>{value}</Text>
+    </View>
+  );
+};
+
+const createStyles = (theme: ThemeTokens) => StyleSheet.create({
+  name: { color: theme.text, fontSize: 20, fontWeight: '800' },
+  email: { color: theme.muted, marginTop: 4 },
+  divider: { backgroundColor: theme.border, height: 1, marginVertical: 14 },
   metric: { marginBottom: 10 },
-  value: { color: colors.text, fontSize: 16, fontWeight: '700' },
-  section: { color: colors.text, fontSize: 16, fontWeight: '800' },
-  copy: { color: colors.muted, lineHeight: 20, marginTop: 6 },
-  button: { backgroundColor: colors.danger, borderRadius: 8, padding: 14 },
-  buttonText: { color: colors.surface, fontWeight: '700', textAlign: 'center' },
+  value: { color: theme.text, fontSize: 16, fontWeight: '700' },
+  section: { color: theme.text, fontSize: 16, fontWeight: '800' },
+  copy: { color: theme.muted, lineHeight: 20, marginBottom: 10, marginTop: 6 },
+  button: { backgroundColor: theme.danger, borderRadius: 8, padding: 14 },
+  buttonText: { color: theme.surface, fontWeight: '700', textAlign: 'center' },
 });

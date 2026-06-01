@@ -4,7 +4,7 @@ import type { DataMode } from '../config/env';
 import type { DataRepository } from '../services/contracts';
 import { createRepositoryBundle } from '../services/repositoryFactory';
 import { clearStoredSession, loadStoredSession, saveStoredSession } from '../storage/sessionStorage';
-import type { AuthSession, CurrencyCode } from '../types/domain';
+import type { AuthSession, CurrencyCode, RegisterInput, RegisterResult } from '../types/domain';
 
 interface AppSessionValue {
   session?: AuthSession;
@@ -15,6 +15,7 @@ interface AppSessionValue {
   preferredCurrency: CurrencyCode;
   setPreferredCurrency: (currency: CurrencyCode) => void;
   login: (email: string, password: string) => Promise<void>;
+  register: (input: RegisterInput) => Promise<RegisterResult>;
   logout: () => void;
 }
 
@@ -54,6 +55,8 @@ export const AppSessionProvider = ({ children }: PropsWithChildren) => {
     await saveStoredSession(nextSession);
   };
 
+  const register = (input: RegisterInput) => bundle.repository.register(input);
+
   const logout = async () => {
     tokenRef.current = undefined;
     setSession(undefined);
@@ -71,6 +74,7 @@ export const AppSessionProvider = ({ children }: PropsWithChildren) => {
         preferredCurrency,
         setPreferredCurrency,
         login,
+        register,
         logout: () => void logout(),
       }}
     >
