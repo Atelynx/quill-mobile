@@ -1,16 +1,19 @@
 import { StyleSheet, Text } from 'react-native';
-import { colors } from '../constants/colors';
+import { useTheme } from '../theme/ThemeContext';
+import type { ThemeTokens } from '../theme/palette';
 
 interface BadgeProps {
   label: string;
   tone?: 'neutral' | 'success' | 'danger' | 'warning';
 }
 
-export const Badge = ({ label, tone = 'neutral' }: BadgeProps) => (
-  <Text style={[styles.badge, styles[tone]]}>{label}</Text>
-);
+export const Badge = ({ label, tone = 'neutral' }: BadgeProps) => {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
+  return <Text style={[styles.badge, styles[tone]]}>{label}</Text>;
+};
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ThemeTokens) => StyleSheet.create({
   badge: {
     alignSelf: 'flex-start',
     borderRadius: 6,
@@ -20,8 +23,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
-  neutral: { backgroundColor: colors.surfaceMuted, color: colors.text },
-  success: { backgroundColor: '#EAF7EE', color: colors.success },
-  danger: { backgroundColor: '#FDECEC', color: colors.danger },
-  warning: { backgroundColor: '#FEF7E6', color: colors.warning },
+  neutral: { backgroundColor: theme.surfaceMuted, color: theme.text },
+  success: { backgroundColor: theme.primarySoft, color: theme.success },
+  danger: { backgroundColor: theme.primarySoft, color: theme.danger },
+  warning: { backgroundColor: theme.primarySoft, color: theme.warning },
 });

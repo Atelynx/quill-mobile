@@ -29,5 +29,7 @@ export const applyCurrencyUpdate = (
         ...rate,
         rate: event.price,
         dayChangePercentage: event.dayChangePercentage ?? rate.dayChangePercentage,
+        estimated: false,
+        message: undefined,
       }
     : rate;

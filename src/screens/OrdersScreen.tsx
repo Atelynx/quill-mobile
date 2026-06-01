@@ -3,17 +3,28 @@ import { Badge } from '../components/Badge';
 import { Card } from '../components/Card';
 import { EmptyState } from '../components/EmptyState';
 import { OrderForm } from '../components/OrderForm';
-import { colors } from '../constants/colors';
 import { useAsyncResource } from '../hooks/useAsyncResource';
 import { useAppSession } from '../state/AppSessionContext';
-import { layoutStyles } from '../styles/layout';
+import { useLayoutStyles } from '../styles/layout';
+import { useTheme } from '../theme/ThemeContext';
+import type { ThemeTokens } from '../theme/palette';
 import type { CreateOrderInput } from '../types/domain';
 import { formatDateTime } from '../utils/dates';
 import { formatMoney } from '../utils/money';
 
 export const OrdersScreen = () => {
   const session = useAppSession();
+  const layoutStyles = useLayoutStyles();
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const resource = useAsyncResource(() => session.repository.getOrders(), [session.repository]);
+  const market = useAsyncResource(async () => {
+    const [quotes, rate] = await Promise.all([
+      session.repository.getMarket(),
+      session.repository.getCurrencyRate(),
+    ]);
+    return { quotes, rate };
+  }, [session.repository]);
 
   const createOrder = async (input: CreateOrderInput) => {
     await session.repository.createOrder(input);
@@ -28,7 +39,11 @@ export const OrdersScreen = () => {
       <Text style={layoutStyles.title}>Órdenes</Text>
       <Text style={layoutStyles.subtitle}>Crea órdenes LIMIT o MARKET</Text>
       <Card>
-        <OrderForm onSubmit={createOrder} />
+        <OrderForm
+          onSubmit={createOrder}
+          quotes={market.data?.quotes ?? []}
+          rate={market.data?.rate.rate ?? 950}
+        />
       </Card>
       <Text style={layoutStyles.sectionTitle}>Órdenes recientes</Text>
       {resource.error ? <Text style={styles.error}>{resource.error}</Text> : null}
@@ -56,10 +71,10 @@ export const OrdersScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  symbol: { color: colors.text, fontSize: 16, fontWeight: '800' },
-  meta: { color: colors.muted, marginTop: 3 },
+const createStyles = (theme: ThemeTokens) => StyleSheet.create({
+  symbol: { color: theme.text, fontSize: 16, fontWeight: '800' },
+  meta: { color: theme.muted, marginTop: 3 },
   right: { alignItems: 'flex-end', gap: 5 },
-  price: { color: colors.text, fontWeight: '700' },
-  error: { color: colors.danger, marginVertical: 10 },
+  price: { color: theme.text, fontWeight: '700' },
+  error: { color: theme.danger, marginVertical: 10 },
 });

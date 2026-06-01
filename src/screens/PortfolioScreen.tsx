@@ -1,15 +1,19 @@
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Card } from '../components/Card';
 import { EmptyState } from '../components/EmptyState';
-import { colors } from '../constants/colors';
 import { useAsyncResource } from '../hooks/useAsyncResource';
 import { useAppSession } from '../state/AppSessionContext';
-import { layoutStyles } from '../styles/layout';
+import { useLayoutStyles } from '../styles/layout';
+import { useTheme } from '../theme/ThemeContext';
+import type { ThemeTokens } from '../theme/palette';
 import type { CurrencyCode } from '../types/domain';
 import { convertMoney, formatMoney } from '../utils/money';
 
 export const PortfolioScreen = () => {
   const session = useAppSession();
+  const layoutStyles = useLayoutStyles();
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const resource = useAsyncResource(async () => {
     const [portfolio, rate] = await Promise.all([
       session.repository.getPortfolio(),
@@ -30,6 +34,7 @@ export const PortfolioScreen = () => {
     >
       <Text style={layoutStyles.title}>Portafolio</Text>
       <Text style={layoutStyles.subtitle}>Balance, posiciones y resultado no realizado</Text>
+      {resource.data?.rate.estimated ? <Text style={styles.warning}>Usando tasa estimada USDCLP.</Text> : null}
       {resource.error ? <Text style={styles.error}>{resource.error}</Text> : null}
       {portfolio ? (
         <>
@@ -70,18 +75,27 @@ export const PortfolioScreen = () => {
 };
 
 const Metric = ({ label, value }: { label: string; value: string }) => (
-  <View>
-    <Text style={styles.label}>{label}</Text>
-    <Text style={styles.value}>{value}</Text>
-  </View>
+  <MetricContent label={label} value={value} />
 );
 
-const styles = StyleSheet.create({
-  label: { color: colors.muted, fontSize: 12, marginBottom: 4 },
-  big: { color: colors.text, fontSize: 28, fontWeight: '800', marginBottom: 14 },
-  symbol: { color: colors.text, fontSize: 16, fontWeight: '800' },
-  value: { color: colors.text, fontWeight: '700' },
-  pnl: { color: colors.success, marginTop: 3 },
+const MetricContent = ({ label, value }: { label: string; value: string }) => {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
+  return (
+    <View>
+      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.value}>{value}</Text>
+    </View>
+  );
+};
+
+const createStyles = (theme: ThemeTokens) => StyleSheet.create({
+  label: { color: theme.muted, fontSize: 12, marginBottom: 4 },
+  big: { color: theme.text, fontSize: 28, fontWeight: '800', marginBottom: 14 },
+  symbol: { color: theme.text, fontSize: 16, fontWeight: '800' },
+  value: { color: theme.text, fontWeight: '700' },
+  pnl: { color: theme.success, marginTop: 3 },
   right: { alignItems: 'flex-end' },
-  error: { color: colors.danger, marginVertical: 10 },
+  error: { color: theme.danger, marginVertical: 10 },
+  warning: { color: theme.warning, marginVertical: 10 },
 });

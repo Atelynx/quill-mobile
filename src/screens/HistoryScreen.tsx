@@ -2,15 +2,19 @@ import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native
 import { Badge } from '../components/Badge';
 import { Card } from '../components/Card';
 import { EmptyState } from '../components/EmptyState';
-import { colors } from '../constants/colors';
 import { useAsyncResource } from '../hooks/useAsyncResource';
 import { useAppSession } from '../state/AppSessionContext';
-import { layoutStyles } from '../styles/layout';
+import { useLayoutStyles } from '../styles/layout';
+import { useTheme } from '../theme/ThemeContext';
+import type { ThemeTokens } from '../theme/palette';
 import { formatDateTime } from '../utils/dates';
 import { formatMoney } from '../utils/money';
 
 export const HistoryScreen = () => {
   const session = useAppSession();
+  const layoutStyles = useLayoutStyles();
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const resource = useAsyncResource(() => session.repository.getTrades(20), [session.repository]);
 
   return (
@@ -45,10 +49,10 @@ export const HistoryScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  symbol: { color: colors.text, fontSize: 16, fontWeight: '800' },
-  meta: { color: colors.muted, marginTop: 3 },
+const createStyles = (theme: ThemeTokens) => StyleSheet.create({
+  symbol: { color: theme.text, fontSize: 16, fontWeight: '800' },
+  meta: { color: theme.muted, marginTop: 3 },
   right: { alignItems: 'flex-end', gap: 5 },
-  value: { color: colors.text, fontWeight: '700' },
-  error: { color: colors.danger, marginVertical: 10 },
+  value: { color: theme.text, fontWeight: '700' },
+  error: { color: theme.danger, marginVertical: 10 },
 });

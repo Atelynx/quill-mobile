@@ -2,8 +2,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Redirect, Tabs } from 'expo-router';
 import type { ColorValue } from 'react-native';
 import { Text, View } from 'react-native';
-import { colors } from '../../src/constants/colors';
 import { useAppSession } from '../../src/state/AppSessionContext';
+import { useTheme } from '../../src/theme/ThemeContext';
 
 const icon = (name: keyof typeof MaterialCommunityIcons.glyphMap) =>
   function TabIcon({ color, size }: { color: ColorValue; size: number }) {
@@ -12,6 +12,7 @@ const icon = (name: keyof typeof MaterialCommunityIcons.glyphMap) =>
 
 export default function TabsLayout() {
   const { hydrating, session } = useAppSession();
+  const { theme } = useTheme();
   if (hydrating) {
     return (
       <View>
@@ -27,8 +28,9 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.muted,
+        tabBarActiveTintColor: theme.primary,
+        tabBarInactiveTintColor: theme.muted,
+        tabBarStyle: { backgroundColor: theme.surface, borderTopColor: theme.border },
       }}
     >
       <Tabs.Screen name="market" options={{ title: 'Mercado', tabBarIcon: icon('chart-line') }} />
