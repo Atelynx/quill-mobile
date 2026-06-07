@@ -14,7 +14,7 @@ export const loadStoredSession = async (): Promise<AuthSession | undefined> => {
   }
 
   try {
-    return JSON.parse(raw) as AuthSession;
+    return normalizeSession(JSON.parse(raw) as AuthSession);
   } catch {
     await clearStoredSession();
     return undefined;
@@ -24,3 +24,12 @@ export const loadStoredSession = async (): Promise<AuthSession | undefined> => {
 export const clearStoredSession = async () => {
   await SecureStore.deleteItemAsync(SESSION_KEY);
 };
+
+const normalizeSession = (session: AuthSession): AuthSession => ({
+  ...session,
+  user: {
+    ...session.user,
+    username: session.user.username ?? null,
+    watchlist: session.user.watchlist ?? [],
+  },
+});

@@ -7,6 +7,8 @@ export interface UserProfile {
   id: string;
   fullName: string;
   email: string;
+  username?: string | null;
+  watchlist: string[];
   availableBalance: number;
   reservedBalance: number;
 }
@@ -20,11 +22,50 @@ export interface RegisterInput {
   fullName: string;
   email: string;
   password: string;
+  username?: string;
 }
 
 export interface RegisterResult {
   message: string;
   email: string;
+  username?: string;
+}
+
+export interface UpdateProfileInput {
+  fullName?: string;
+  username?: string;
+}
+
+export interface ChangeEmailInput {
+  currentPassword: string;
+  newEmail: string;
+}
+
+export interface ChangePasswordInput {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface WatchlistResponse {
+  watchlist: string[];
+}
+
+export interface Friend {
+  _id: string;
+  fullName: string;
+  email: string;
+  username?: string | null;
+}
+
+export interface FriendRequest {
+  _id: string;
+  from: Friend;
+  status: 'pending' | 'accepted';
+  createdAt: string;
+}
+
+export interface MessageResponse {
+  message: string;
 }
 
 export interface StockQuote {

@@ -6,28 +6,22 @@ import { MarketQuoteCard } from '../components/MarketQuoteCard';
 import { MarketTrendChart } from '../components/MarketTrendChart';
 import { StatusBanner } from '../components/StatusBanner';
 import { useAsyncResource } from '../hooks/useAsyncResource';
-import { createRealtimeClient } from '../services/realtimeService';
+import { useMarketRealtime } from '../hooks/useMarketRealtime';
 import { useAppSession } from '../state/AppSessionContext';
 import { useLayoutStyles } from '../styles/layout';
 import { useTheme } from '../theme/ThemeContext';
-import type { CurrencyRate, StockQuote } from '../types/domain';
 import { convertHistoryCurrency } from '../utils/history';
 import { formatMoney } from '../utils/money';
-import { applyCurrencyUpdate, applyMarketUpdate } from '../utils/realtimeUpdates';
 
 export const MarketScreen = () => {
   const session = useAppSession();
   const layoutStyles = useLayoutStyles();
   const { theme } = useTheme();
   const styles = createStyles(theme);
-  const [liveQuotes, setLiveQuotes] = useState<StockQuote[]>([]);
-  const [liveRate, setLiveRate] = useState<CurrencyRate>();
   const [selectedSymbol, setSelectedSymbol] = useState<string>();
-  const [socketStatus, setSocketStatus] = useState('Actualización manual disponible');
-  const subscriptionSymbols = useMemo(
-    () => resourceDataSymbols(liveQuotes),
-    [liveQuotes],
-  );
+  const [watchlist, setWatchlist] = useState(session.session?.user.watchlist ?? []);
+  const [watchFeedback, setWatchFeedback] = useState<string>();
+  const { liveQuotes, liveRate, setLiveQuotes, setLiveRate, socketStatus } = useMarketRealtime(session);
   const resource = useAsyncResource(async () => {
     const [market, rate] = await Promise.all([
       session.repository.getMarket(),
@@ -47,29 +41,24 @@ export const MarketScreen = () => {
       setLiveRate(nextData.rate);
       setSelectedSymbol((current) => current ?? nextData.market[0]?.symbol);
     }
-  }, [resource.data]);
+  }, [resource.data, setLiveQuotes, setLiveRate]);
 
-  useEffect(() => {
-    if (session.mode !== 'backend' || !session.accessToken || !subscriptionSymbols) {
-      return undefined;
+  useEffect(() => setWatchlist(session.session?.user.watchlist ?? []), [session.session?.user.watchlist]);
+
+  const toggleWatchlist = async (symbol: string) => {
+    setWatchFeedback(undefined);
+    try {
+      const result = watchlist.includes(symbol)
+        ? await session.repository.removeFromWatchlist(symbol)
+        : await session.repository.addToWatchlist([symbol]);
+      setWatchlist(result.watchlist);
+      if (session.session?.user) {
+        await session.updateSessionUser({ ...session.session.user, watchlist: result.watchlist });
+      }
+    } catch (error) {
+      setWatchFeedback(error instanceof Error ? error.message : 'No fue posible actualizar seguimiento.');
     }
-
-    const client = createRealtimeClient(session.accessToken, {
-      onStatus: (status) =>
-        setSocketStatus(status === 'connected' ? 'Tiempo real conectado' : 'Actualización manual disponible'),
-      onPrice: (event) => {
-        if (event.symbol === 'USDCLP') {
-          setLiveRate((current) => (current ? applyCurrencyUpdate(current, event) : current));
-          return;
-        }
-        setLiveQuotes((current) => applyMarketUpdate(current, event));
-      },
-    });
-
-    subscriptionSymbols.split('|').forEach((symbol) => client.subscribeStock(symbol));
-    client.subscribeForex('USDCLP');
-    return () => client.disconnect();
-  }, [session.accessToken, session.mode, subscriptionSymbols]);
+  };
 
   const rate = liveRate?.rate ?? 1;
   const selectedQuote = liveQuotes.find((quote) => quote.symbol === selectedSymbol);
@@ -96,6 +85,7 @@ export const MarketScreen = () => {
       />
       {rateMessage ? <Text style={styles.warning}>{rateMessage}</Text> : null}
       {resource.error ? <Text style={styles.error}>{resource.error}</Text> : null}
+      {watchFeedback ? <Text style={styles.warning}>{watchFeedback}</Text> : null}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.symbolList}>
         {liveQuotes.map((quote) => (
           <Pressable
@@ -122,14 +112,13 @@ export const MarketScreen = () => {
           quote={quote}
           targetCurrency={session.preferredCurrency}
           usdclpRate={rate}
+          watched={watchlist.includes(quote.symbol)}
+          onToggleWatch={() => void toggleWatchlist(quote.symbol)}
         />
       ))}
     </ScrollView>
   );
 };
-
-const resourceDataSymbols = (quotes: StockQuote[]) =>
-  quotes.map((quote) => quote.symbol).join('|');
 
 const createStyles = (theme: ReturnType<typeof useTheme>['theme']) => StyleSheet.create({
   name: { color: theme.muted, marginTop: 3 },

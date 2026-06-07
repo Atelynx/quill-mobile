@@ -11,6 +11,7 @@ export const LoginScreen = () => {
   const styles = createStyles(theme);
   const [modeForm, setModeForm] = useState<'login' | 'register'>('login');
   const [fullName, setFullName] = useState('Usuario Demo');
+  const [username, setUsername] = useState('usuario_demo');
   const [email, setEmail] = useState('demo@quill.local');
   const [password, setPassword] = useState('Demo123456!');
   const [error, setError] = useState<string>();
@@ -24,7 +25,7 @@ export const LoginScreen = () => {
         await login(email, password);
         return;
       }
-      const result = await register({ fullName, email, password });
+      const result = await register({ fullName, email, password, username });
       setInfo(result.message);
       setModeForm('login');
     } catch (actionError) {
@@ -44,16 +45,40 @@ export const LoginScreen = () => {
         <Tab label="Crear cuenta" active={modeForm === 'register'} onPress={() => setModeForm('register')} />
       </View>
       {modeForm === 'register' ? (
-        <TextInput
-          value={fullName}
-          onChangeText={setFullName}
-          placeholder="Nombre completo"
-          placeholderTextColor={theme.muted}
-          style={styles.input}
-        />
+        <>
+          <TextInput
+            value={fullName}
+            onChangeText={setFullName}
+            placeholder="Nombre completo"
+            placeholderTextColor={theme.muted}
+            style={styles.input}
+          />
+          <TextInput
+            value={username}
+            onChangeText={setUsername}
+            autoCapitalize="none"
+            placeholder="Username opcional"
+            placeholderTextColor={theme.muted}
+            style={styles.input}
+          />
+        </>
       ) : null}
-      <TextInput value={email} onChangeText={setEmail} keyboardType="email-address" style={styles.input} />
-      <TextInput value={password} onChangeText={setPassword} secureTextEntry style={styles.input} />
+      <TextInput
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        placeholder="Correo"
+        placeholderTextColor={theme.muted}
+        style={styles.input}
+      />
+      <TextInput
+        value={password}
+        onChangeText={setPassword}
+        placeholder="Contraseña"
+        placeholderTextColor={theme.muted}
+        secureTextEntry
+        style={styles.input}
+      />
       <Pressable accessibilityRole="button" onPress={() => void submit()} style={styles.button}>
         <Text style={styles.buttonText}>{modeForm === 'login' ? 'Entrar' : 'Crear cuenta'}</Text>
       </Pressable>

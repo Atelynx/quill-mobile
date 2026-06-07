@@ -20,11 +20,33 @@ El registro real envía:
 {
   "fullName": "Usuario Demo",
   "email": "demo@quill.local",
-  "password": "Demo123456!"
+  "password": "Demo123456!",
+  "username": "usuario_demo"
 }
 ```
 
-El backend responde con mensaje y correo. Después del registro, la app muestra el mensaje y vuelve al login para iniciar sesión.
+`username` es opcional. Si el backend lo autogenera o lo devuelve después del login/perfil, la app lo conserva en sesión. Después del registro, la app muestra el mensaje y vuelve al login para iniciar sesión.
+
+## Perfil, watchlist y amigos
+
+La app usa endpoints confirmados del backend:
+
+- `GET /api/users/me`: restaura perfil con `username`, `watchlist`, saldos y correo.
+- `PATCH /api/users/me`: actualiza `fullName` y `username`.
+- `PATCH /api/users/me/email`: cambia correo con contraseña actual.
+- `PATCH /api/users/me/password`: cambia contraseña.
+- `GET /api/users/me/watchlist`: lista símbolos seguidos con cotizaciones.
+- `POST /api/users/me/watchlist`: agrega `{ "symbols": ["AAPL.US"] }`.
+- `DELETE /api/users/me/watchlist/:symbol`: quita un símbolo.
+- `GET /api/users/me/friends`: lista amigos.
+- `GET /api/users/me/friends/requests`: lista solicitudes recibidas.
+- `POST/PATCH/DELETE /api/users/me/friends/:userId`: envía, acepta/rechaza o elimina relación.
+
+No hay endpoint confirmado de búsqueda global por email o username. La pantalla social filtra localmente amigos existentes y permite enviar solicitud si se conoce el `userId`.
+
+## Fallback controlado
+
+Con `EXPO_PUBLIC_FALLBACK_TO_MOCKS=true`, lecturas, watchlist y acciones sociales usan mocks si el backend falla. Login, cambios de credenciales y creación de órdenes no hacen fallback para evitar simular acciones sensibles en modo backend.
 
 ## Tipo de cambio USDCLP
 

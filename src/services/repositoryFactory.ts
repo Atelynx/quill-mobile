@@ -1,7 +1,8 @@
 import { HttpClient } from '../api/httpClient';
-import { getDataMode, type DataMode } from '../config/env';
+import { appConfig, getDataMode, type DataMode } from '../config/env';
 import { BackendRepository } from './backendRepository';
 import type { DataRepository } from './contracts';
+import { FallbackRepository } from './fallbackRepository';
 import { MockRepository } from './mockRepository';
 
 export interface RepositoryBundle {
@@ -17,5 +18,9 @@ export const createRepositoryBundle = (
   if (mode === 'mock') {
     return { mode, repository: new MockRepository() };
   }
-  return { mode, repository: new BackendRepository(new HttpClient(getToken, onUnauthorized)) };
+  const backend = new BackendRepository(new HttpClient(getToken, onUnauthorized));
+  const repository = appConfig.fallbackToMocks
+    ? new FallbackRepository(backend, new MockRepository())
+    : backend;
+  return { mode, repository };
 };

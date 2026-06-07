@@ -2,6 +2,6 @@
 
 Contiene estado global liviano para sesión y preferencias.
 
-- `AppSessionContext.tsx`: administra sesión en memoria, moneda preferida, modo de datos y repositorio activo.
+- `AppSessionContext.tsx`: administra sesión en memoria, persistencia segura, moneda preferida, modo de datos, repositorio activo y actualización local del perfil.
 
-La sesión no persiste tokens en archivos ni almacenamiento local; en modo backend se vuelve a iniciar sesión al reabrir la app.
+La sesión usa `expo-secure-store` para restaurar token y perfil en el dispositivo. Las credenciales y contraseñas nunca se guardan.

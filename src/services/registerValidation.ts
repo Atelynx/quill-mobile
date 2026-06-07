@@ -5,6 +5,13 @@ const schema = z.object({
   fullName: z.string().trim().min(3, 'Ingresa tu nombre completo.'),
   email: z.string().trim().email('Ingresa un correo válido.'),
   password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres.'),
+  username: z
+    .string()
+    .trim()
+    .min(3, 'El username debe tener al menos 3 caracteres.')
+    .regex(/^[a-zA-Z0-9_]+$/, 'Usa sólo letras, números y guion bajo en username.')
+    .optional()
+    .or(z.literal('')),
 });
 
 export type RegisterValidationResult =
@@ -19,6 +26,11 @@ export const validateRegisterInput = (input: unknown): RegisterValidationResult 
 
   return {
     success: true,
-    data: { ...parsed.data, email: parsed.data.email.toLowerCase() },
+    data: {
+      fullName: parsed.data.fullName,
+      email: parsed.data.email.toLowerCase(),
+      password: parsed.data.password,
+      username: parsed.data.username ? parsed.data.username.toLowerCase() : undefined,
+    },
   };
 };

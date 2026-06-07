@@ -4,7 +4,7 @@ import type { DataMode } from '../config/env';
 import type { DataRepository } from '../services/contracts';
 import { createRepositoryBundle } from '../services/repositoryFactory';
 import { clearStoredSession, loadStoredSession, saveStoredSession } from '../storage/sessionStorage';
-import type { AuthSession, CurrencyCode, RegisterInput, RegisterResult } from '../types/domain';
+import type { AuthSession, CurrencyCode, RegisterInput, RegisterResult, UserProfile } from '../types/domain';
 
 interface AppSessionValue {
   session?: AuthSession;
@@ -16,6 +16,7 @@ interface AppSessionValue {
   setPreferredCurrency: (currency: CurrencyCode) => void;
   login: (email: string, password: string) => Promise<void>;
   register: (input: RegisterInput) => Promise<RegisterResult>;
+  updateSessionUser: (user: UserProfile) => Promise<void>;
   logout: () => void;
 }
 
@@ -49,13 +50,23 @@ export const AppSessionProvider = ({ children }: PropsWithChildren) => {
   }, []);
 
   const login = async (email: string, password: string) => {
-    const nextSession = await bundle.repository.login(email, password);
+    const response = await bundle.repository.login(email, password);
+    const nextSession = { ...response, user: normalizeUser(response.user) };
     tokenRef.current = nextSession.accessToken;
     setSession(nextSession);
     await saveStoredSession(nextSession);
   };
 
   const register = (input: RegisterInput) => bundle.repository.register(input);
+
+  const updateSessionUser = async (user: UserProfile) => {
+    if (!session) {
+      return;
+    }
+    const nextSession = { ...session, user: normalizeUser(user) };
+    setSession(nextSession);
+    await saveStoredSession(nextSession);
+  };
 
   const logout = async () => {
     tokenRef.current = undefined;
@@ -75,6 +86,7 @@ export const AppSessionProvider = ({ children }: PropsWithChildren) => {
         setPreferredCurrency,
         login,
         register,
+        updateSessionUser,
         logout: () => void logout(),
       }}
     >
@@ -82,6 +94,12 @@ export const AppSessionProvider = ({ children }: PropsWithChildren) => {
     </AppSessionContext.Provider>
   );
 };
+
+const normalizeUser = (user: UserProfile): UserProfile => ({
+  ...user,
+  username: user.username ?? null,
+  watchlist: user.watchlist ?? [],
+});
 
 export const useAppSession = () => {
   const context = useContext(AppSessionContext);
