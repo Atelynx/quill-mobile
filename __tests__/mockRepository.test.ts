@@ -1,6 +1,11 @@
 import { MockRepository } from '../src/services/mockRepository';
+import { resetMockState } from '../src/services/mockState';
 
 describe('MockRepository', () => {
+  beforeEach(() => {
+    resetMockState();
+  });
+
   it('crea una orden demo y la deja al inicio del listado', async () => {
     const repository = new MockRepository();
     const created = await repository.createOrder({
@@ -23,8 +28,54 @@ describe('MockRepository', () => {
       fullName: 'Nueva Persona',
       email: 'nueva@quill.local',
       password: 'Demo123456!',
+      username: 'nueva_persona',
     })).resolves.toMatchObject({ email: 'nueva@quill.local' });
 
+    await expect(repository.login('nueva@quill.local', 'Demo123456!')).resolves.toMatchObject({
+      user: { username: 'nueva_persona' },
+    });
     await expect(repository.getMarketHistory('COPEC.SN', 4)).resolves.toHaveLength(4);
+  });
+
+  it('actualiza watchlist demo', async () => {
+    const repository = new MockRepository();
+
+    await expect(repository.addToWatchlist(['MSFT.US'])).resolves.toMatchObject({
+      watchlist: expect.arrayContaining(['MSFT.US']),
+    });
+    await expect(repository.getWatchlist()).resolves.toEqual(
+      expect.arrayContaining([expect.objectContaining({ symbol: 'MSFT.US' })]),
+    );
+    await expect(repository.removeFromWatchlist('MSFT.US')).resolves.toMatchObject({
+      watchlist: expect.not.arrayContaining(['MSFT.US']),
+    });
+  });
+
+  it('comparte watchlist entre instancias mock', async () => {
+    const marketRepository = new MockRepository();
+    const userRepository = new MockRepository();
+
+    await marketRepository.addToWatchlist(['MSFT.US']);
+    await expect(userRepository.getWatchlist()).resolves.toEqual(
+      expect.arrayContaining([expect.objectContaining({ symbol: 'MSFT.US' })]),
+    );
+
+    await marketRepository.removeFromWatchlist('MSFT.US');
+    await expect(userRepository.getWatchlist()).resolves.not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ symbol: 'MSFT.US' })]),
+    );
+  });
+
+
+  it('resuelve solicitudes de amistad demo', async () => {
+    const repository = new MockRepository();
+    const requests = await repository.getFriendRequests();
+
+    await expect(repository.acceptFriendRequest(requests[0].from._id)).resolves.toMatchObject({
+      message: 'Solicitud demo aceptada.',
+    });
+    await expect(repository.getFriends()).resolves.toEqual(
+      expect.arrayContaining([expect.objectContaining({ _id: requests[0].from._id })]),
+    );
   });
 });

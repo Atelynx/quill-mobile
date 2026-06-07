@@ -2,6 +2,6 @@
 
 Contiene datos locales controlados para ejecutar la app sin backend.
 
-- `demoData.ts`: define usuario demo, cotizaciones, portafolio, órdenes, operaciones y tasa `USDCLP`.
+- `demoData.ts`: define usuario demo con `username`, watchlist, amigos, solicitudes, cotizaciones, portafolio, órdenes, operaciones y tasa `USDCLP`.
 
 Los datos siguen los contratos móviles de `src/types` y representan una demo local, no datos productivos. El historial de mercado se genera desde las cotizaciones demo para mantener un gráfico coherente sin backend.

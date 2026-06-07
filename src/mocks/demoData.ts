@@ -1,5 +1,7 @@
 import type {
   CurrencyRate,
+  Friend,
+  FriendRequest,
   OrderRecord,
   PortfolioSummary,
   StockQuote,
@@ -11,6 +13,8 @@ export const demoUser: UserProfile = {
   id: 'demo-user',
   fullName: 'Usuario Demo',
   email: 'demo@quill.local',
+  username: 'usuario_demo',
+  watchlist: ['COPEC.SN', 'AAPL.US'],
   availableBalance: 7425000,
   reservedBalance: 320000,
 };
@@ -92,5 +96,34 @@ export const demoTrades: TradeRecord[] = [
     commissionAmount: 918,
     netAmount: 182582,
     executedAt: '2026-05-29T17:40:01.000Z',
+  },
+];
+
+export const demoFriends: Friend[] = [
+  {
+    _id: 'friend-1',
+    fullName: 'Camila Rojas',
+    email: 'camila@quill.local',
+    username: 'camila_rojas',
+  },
+  {
+    _id: 'friend-2',
+    fullName: 'Diego Morales',
+    email: 'diego@quill.local',
+    username: null,
+  },
+];
+
+export const demoFriendRequests: FriendRequest[] = [
+  {
+    _id: 'request-1',
+    from: {
+      _id: 'friend-3',
+      fullName: 'Valentina Soto',
+      email: 'valentina@quill.local',
+      username: 'vale_soto',
+    },
+    status: 'pending',
+    createdAt: '2026-06-01T09:30:00.000Z',
   },
 ];

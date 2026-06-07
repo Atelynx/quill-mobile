@@ -1,17 +1,5 @@
 import { HttpClient } from '../api/httpClient';
-import type {
-  AuthSession,
-  CreateOrderInput,
-  CurrencyRate,
-  OrderRecord,
-  PricePoint,
-  PortfolioSummary,
-  RegisterInput,
-  RegisterResult,
-  StockQuote,
-  TradeRecord,
-  UserProfile,
-} from '../types/domain';
+import type { AuthSession, ChangeEmailInput, ChangePasswordInput, CreateOrderInput, CurrencyRate, Friend, FriendRequest, MessageResponse, OrderRecord, PricePoint, PortfolioSummary, RegisterInput, RegisterResult, StockQuote, TradeRecord, UpdateProfileInput, UserProfile, WatchlistResponse } from '../types/domain';
 import type { DataRepository } from './contracts';
 import { estimatedUsdClpRate } from './currencyFallback';
 import { validateOrderInput } from './orderValidation';
@@ -40,6 +28,27 @@ export class BackendRepository implements DataRepository {
 
   async getProfile(): Promise<UserProfile> {
     return this.client.request<UserProfile>('/users/me');
+  }
+
+  async updateProfile(input: UpdateProfileInput): Promise<UserProfile> {
+    return this.client.request<UserProfile>('/users/me', {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    });
+  }
+
+  async changeEmail(input: ChangeEmailInput): Promise<MessageResponse> {
+    return this.client.request<MessageResponse>('/users/me/email', {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    });
+  }
+
+  async changePassword(input: ChangePasswordInput): Promise<MessageResponse> {
+    return this.client.request<MessageResponse>('/users/me/password', {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    });
   }
 
   async getMarket(): Promise<StockQuote[]> {
@@ -81,6 +90,52 @@ export class BackendRepository implements DataRepository {
     } catch {
       return estimatedUsdClpRate();
     }
+  }
+
+  async getWatchlist(): Promise<StockQuote[]> {
+    return this.client.request<StockQuote[]>('/users/me/watchlist');
+  }
+
+  async addToWatchlist(symbols: string[]): Promise<WatchlistResponse> {
+    return this.client.request<WatchlistResponse>('/users/me/watchlist', {
+      method: 'POST',
+      body: JSON.stringify({ symbols }),
+    });
+  }
+
+  async removeFromWatchlist(symbol: string): Promise<WatchlistResponse> {
+    return this.client.request<WatchlistResponse>(`/users/me/watchlist/${encodeURIComponent(symbol)}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getFriends(): Promise<Friend[]> {
+    return this.client.request<Friend[]>('/users/me/friends');
+  }
+
+  async getFriendRequests(): Promise<FriendRequest[]> {
+    return this.client.request<FriendRequest[]>('/users/me/friends/requests');
+  }
+
+  async sendFriendRequest(userId: string): Promise<MessageResponse> {
+    return this.client.request<MessageResponse>(`/users/me/friends/${encodeURIComponent(userId)}`, {
+      method: 'POST',
+    });
+  }
+
+  async acceptFriendRequest(userId: string): Promise<MessageResponse> {
+    return this.client.request<MessageResponse>(`/users/me/friends/${encodeURIComponent(userId)}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: 'accepted' }),
+    });
+  }
+
+  async rejectFriendRequest(userId: string): Promise<MessageResponse> { return this.removeFriend(userId); }
+
+  async removeFriend(userId: string): Promise<MessageResponse> {
+    return this.client.request<MessageResponse>(`/users/me/friends/${encodeURIComponent(userId)}`, {
+      method: 'DELETE',
+    });
   }
 
   async getConnectionStatus() {
