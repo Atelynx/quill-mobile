@@ -1,7 +1,6 @@
 import { HttpClient } from '../api/httpClient';
 import type { AuthSession, ChangeEmailInput, ChangePasswordInput, CreateOrderInput, CurrencyRate, Friend, FriendRequest, MessageResponse, OrderRecord, PricePoint, PortfolioSummary, RegisterInput, RegisterResult, StockQuote, TradeRecord, UpdateProfileInput, UserProfile, WatchlistResponse } from '../types/domain';
 import type { DataRepository } from './contracts';
-import { estimatedUsdClpRate } from './currencyFallback';
 import { validateOrderInput } from './orderValidation';
 import { validateRegisterInput } from './registerValidation';
 
@@ -85,11 +84,7 @@ export class BackendRepository implements DataRepository {
   }
 
   async getCurrencyRate(): Promise<CurrencyRate> {
-    try {
-      return await this.client.request<CurrencyRate>('/currency/rates/USDCLP');
-    } catch {
-      return estimatedUsdClpRate();
-    }
+    return this.client.request<CurrencyRate>('/currency/rates/USDCLP');
   }
 
   async getWatchlist(): Promise<StockQuote[]> {

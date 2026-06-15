@@ -10,11 +10,11 @@ describe('currencyFallback', () => {
     });
   });
 
-  it('mantiene backend real y usa fallback solo si currency falla', async () => {
+  it('backend propaga errores de currency sin convertirlos silenciosamente', async () => {
     const client = { request: jest.fn().mockRejectedValue(new Error('Rate not available')) };
     const repository = new BackendRepository(client as never);
 
-    await expect(repository.getCurrencyRate()).resolves.toMatchObject({ estimated: true });
+    await expect(repository.getCurrencyRate()).rejects.toThrow('Rate not available');
     expect(client.request).toHaveBeenCalledWith('/currency/rates/USDCLP');
   });
 });

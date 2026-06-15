@@ -39,7 +39,13 @@ export const LoginScreen = () => {
       <StatusBar style={theme.mode === 'dark' ? 'light' : 'dark'} />
       <Text style={styles.brand}>Quill</Text>
       <Text style={styles.title}>Invierte y revisa tu portafolio desde Android.</Text>
-      <Text style={styles.mode}>{mode === 'mock' ? 'Modo demo local' : 'Backend real configurado'}</Text>
+      <Text style={styles.mode}>
+        {mode === 'mock'
+          ? 'Modo demo local'
+          : mode === 'backend-fallback'
+            ? 'Backend con respaldo demo para mercado'
+            : 'Backend real configurado'}
+      </Text>
       <View style={styles.segment}>
         <Tab label="Entrar" active={modeForm === 'login'} onPress={() => setModeForm('login')} />
         <Tab label="Crear cuenta" active={modeForm === 'register'} onPress={() => setModeForm('register')} />
