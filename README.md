@@ -104,6 +104,8 @@ npx expo start --clear
 npm audit
 ```
 
+GitHub Actions ejecuta automáticamente `npm ci`, typecheck, tests y lint en cada push y pull request mediante el workflow `Mobile CI`. El workflow usa Node `20.19.4`, caché npm y un directorio `HOME` temporal escribible para Expo.
+
 ## Limitaciones conocidas
 
 - La sesión se guarda con `expo-secure-store`; no se guardan credenciales ni contraseñas.
