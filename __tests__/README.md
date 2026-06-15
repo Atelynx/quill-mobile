@@ -14,6 +14,7 @@ Contiene pruebas automatizadas de la app móvil.
 - `theme.test.ts`: valida temas disponibles y nombres persistibles.
 - `httpClient.test.ts`: valida token Bearer y limpieza ante 401.
 - `sessionStorage.test.ts`: valida persistencia segura con mock de SecureStore y migración de sesión antigua.
+- `appSessionContext.test.ts`: valida logout, cierre inmediato en memoria y manejo de fallos de SecureStore.
 - `realtimeUpdates.test.ts`: valida actualización de cotizaciones y `USDCLP`.
 
 Las pruebas se ejecutan con `npm test`.
