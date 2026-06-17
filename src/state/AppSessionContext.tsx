@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { PropsWithChildren } from 'react';
 import type { DataMode } from '../config/env';
 import type { DataRepository } from '../services/contracts';
@@ -27,14 +27,16 @@ export const AppSessionProvider = ({ children }: PropsWithChildren) => {
   const [hydrating, setHydrating] = useState(true);
   const [preferredCurrency, setPreferredCurrency] = useState<CurrencyCode>('CLP');
   const tokenRef = useRef<string | undefined>(undefined);
+  const closeSession = useCallback(() => {
+    tokenRef.current = undefined;
+    setSession(undefined);
+    clearStoredSession().catch((error: unknown) => {
+      console.error('No fue posible eliminar la sesión persistida.', error);
+    });
+  }, []);
   const bundle = useMemo(
-    () =>
-      createRepositoryBundle(() => tokenRef.current, () => {
-        tokenRef.current = undefined;
-        setSession(undefined);
-        void clearStoredSession();
-      }),
-    [],
+    () => createRepositoryBundle(() => tokenRef.current, closeSession),
+    [closeSession],
   );
 
   useEffect(() => {
@@ -68,12 +70,6 @@ export const AppSessionProvider = ({ children }: PropsWithChildren) => {
     await saveStoredSession(nextSession);
   };
 
-  const logout = async () => {
-    tokenRef.current = undefined;
-    setSession(undefined);
-    await clearStoredSession();
-  };
-
   return (
     <AppSessionContext.Provider
       value={{
@@ -87,7 +83,7 @@ export const AppSessionProvider = ({ children }: PropsWithChildren) => {
         login,
         register,
         updateSessionUser,
-        logout: () => void logout(),
+        logout: closeSession,
       }}
     >
       {children}

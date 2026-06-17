@@ -5,7 +5,7 @@ import { applyCurrencyUpdate, applyMarketUpdate } from '../utils/realtimeUpdates
 
 interface MarketRealtimeInput {
   accessToken?: string;
-  mode: 'mock' | 'backend';
+  mode: 'mock' | 'backend' | 'backend-fallback';
 }
 
 export const useMarketRealtime = ({ accessToken, mode }: MarketRealtimeInput) => {
@@ -15,7 +15,7 @@ export const useMarketRealtime = ({ accessToken, mode }: MarketRealtimeInput) =>
   const subscriptionSymbols = useMemo(() => liveQuotes.map((quote) => quote.symbol).join('|'), [liveQuotes]);
 
   useEffect(() => {
-    if (mode !== 'backend' || !accessToken || !subscriptionSymbols) {
+    if (mode === 'mock' || !accessToken || !subscriptionSymbols) {
       return undefined;
     }
 

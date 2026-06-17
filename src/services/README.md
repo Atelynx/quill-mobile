@@ -10,9 +10,9 @@ Contiene la capa de aplicación y acceso a datos.
 - `mockRepository.ts`: repositorio local mutable para demo, conectado al estado compartido mock.
 - `mockState.ts`: mantiene una fuente compartida de sesión, watchlist, órdenes, amigos y solicitudes para todas las instancias mock.
 - `mockOrders.ts`: construye órdenes y operaciones demo desde el contrato de órdenes.
-- `backendRepository.ts`: implementación REST contra NestJS para auth, usuario, mercado, historial, portafolio, órdenes, trades y currency.
-- `fallbackRepository.ts`: deriva lecturas y funciones sociales/watchlist a mocks cuando el backend falla y el entorno permite fallback.
-- `repositoryFactory.ts`: selecciona repositorio según entorno y aplica fallback controlado.
+- `backendRepository.ts`: implementación REST contra NestJS que propaga errores backend sin simular respuestas reales.
+- `fallbackRepository.ts`: limita fallback a mercado, historial y currency ante fallos de transporte; nunca degrada HTTP ni mutaciones.
+- `repositoryFactory.ts`: selecciona backend, demo explícita o backend con fallback demo visible según entorno.
 - `realtimeService.ts`: cliente Socket.IO autenticado para `price_update`, acciones y `USDCLP`.
 
 Las pantallas consumen esta carpeta mediante el estado global, sin conocer detalles HTTP.
