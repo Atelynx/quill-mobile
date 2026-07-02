@@ -4,11 +4,21 @@
     "slug": "quill-mobile",
     "version": "0.1.0",
     "orientation": "portrait",
+    "icon": "./assets/quill.png",
     "scheme": "quillmobile",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/quill.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF"
+    },
     "android": {
-      "package": "cl.quill.mobile"
+      "package": "cl.quill.mobile",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/quill.png",
+        "backgroundColor": "#FFFFFF"
+      }
     },
     "web": {
       "bundler": "metro"
