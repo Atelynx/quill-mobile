@@ -21,6 +21,38 @@ describe('MockRepository', () => {
     expect(orders[0].status).toBe('PENDING');
   });
 
+  it('expone estado de mercado demo', async () => {
+    const repository = new MockRepository();
+
+    await expect(repository.getMarketStatus()).resolves.toMatchObject({
+      open: true,
+      openTime: '09:30',
+      closeTime: '16:00',
+    });
+  });
+
+  it('cancela una orden pendiente demo', async () => {
+    const repository = new MockRepository();
+    const created = await repository.createOrder({
+      symbol: 'COPEC.SN',
+      side: 'BUY',
+      type: 'LIMIT',
+      quantity: 2,
+      limitPrice: 7000,
+    });
+
+    await expect(repository.cancelOrder(created._id)).resolves.toMatchObject({
+      _id: created._id,
+      status: 'CANCELLED',
+    });
+  });
+
+  it('rechaza cancelación demo de orden inexistente', async () => {
+    const repository = new MockRepository();
+
+    await expect(repository.cancelOrder('missing-order')).rejects.toThrow('No fue posible cancelar la orden.');
+  });
+
   it('simula registro y expone historial de mercado', async () => {
     const repository = new MockRepository();
 

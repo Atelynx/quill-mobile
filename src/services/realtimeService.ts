@@ -1,5 +1,11 @@
 import { io, type Socket } from 'socket.io-client';
-import { appConfig } from '../config/env';
+import { appConfig, type AppConfig } from '../config/env';
+
+export const REALTIME_NAMESPACE_PATH = '/realtime';
+
+export type RealtimeStatus = 'connected' | 'disconnected' | 'error';
+
+type SocketFactory = typeof io;
 
 export interface RealtimeClient {
   subscribeStock(symbol: string): void;
@@ -9,17 +15,38 @@ export interface RealtimeClient {
 
 interface RealtimeHandlers {
   onPrice: (event: { symbol: string; price: number; dayChangePercentage?: number }) => void;
-  onStatus?: (status: 'connected' | 'disconnected' | 'error') => void;
+  onStatus?: (status: RealtimeStatus) => void;
 }
+
+export const hasRealtimeNamespace = (socketUrl: string) => {
+  try {
+    return new URL(socketUrl).pathname.replace(/\/$/, '') === REALTIME_NAMESPACE_PATH;
+  } catch {
+    return false;
+  }
+};
+
+export const buildRealtimeSocketUrl = (config: Pick<AppConfig, 'socketUrl'>) =>
+  config.socketUrl.replace(/\/$/, '');
+
+export const buildRealtimeOptions = (token: string) => ({
+  transports: ['websocket'],
+  auth: { token },
+});
 
 export const createRealtimeClient = (
   token: string,
   handlers: RealtimeHandlers,
+  config: Pick<AppConfig, 'socketUrl'> = appConfig,
+  socketFactory: SocketFactory = io,
 ): RealtimeClient => {
-  const socket: Socket = io(appConfig.socketUrl, {
-    transports: ['websocket'],
-    auth: { token },
-  });
+  const socketUrl = buildRealtimeSocketUrl(config);
+  if (!hasRealtimeNamespace(socketUrl)) {
+    handlers.onStatus?.('error');
+    return createUnavailableClient();
+  }
+
+  const socket: Socket = socketFactory(socketUrl, buildRealtimeOptions(token));
 
   socket.on('connect', () => handlers.onStatus?.('connected'));
   socket.on('disconnect', () => handlers.onStatus?.('disconnected'));
@@ -32,3 +59,9 @@ export const createRealtimeClient = (
     disconnect: () => socket.disconnect(),
   };
 };
+
+const createUnavailableClient = (): RealtimeClient => ({
+  subscribeStock: () => undefined,
+  subscribeForex: () => undefined,
+  disconnect: () => undefined,
+});

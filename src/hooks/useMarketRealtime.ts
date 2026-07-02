@@ -8,6 +8,9 @@ interface MarketRealtimeInput {
   mode: 'mock' | 'backend' | 'backend-fallback';
 }
 
+export const getRealtimeStatusMessage = (status: 'connected' | 'disconnected' | 'error') =>
+  status === 'connected' ? 'Tiempo real conectado' : 'Actualización manual disponible';
+
 export const useMarketRealtime = ({ accessToken, mode }: MarketRealtimeInput) => {
   const [liveQuotes, setLiveQuotes] = useState<StockQuote[]>([]);
   const [liveRate, setLiveRate] = useState<CurrencyRate>();
@@ -21,7 +24,7 @@ export const useMarketRealtime = ({ accessToken, mode }: MarketRealtimeInput) =>
 
     const client = createRealtimeClient(accessToken, {
       onStatus: (status) =>
-        setSocketStatus(status === 'connected' ? 'Tiempo real conectado' : 'Actualización manual disponible'),
+        setSocketStatus(getRealtimeStatusMessage(status)),
       onPrice: (event) => {
         if (event.symbol === 'USDCLP') {
           setLiveRate((current) => (current ? applyCurrencyUpdate(current, event) : current));

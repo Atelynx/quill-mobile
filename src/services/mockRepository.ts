@@ -35,9 +35,7 @@ export class MockRepository implements DataRepository {
     };
   }
 
-  async getProfile() {
-    return this.state.user;
-  }
+  async getProfile() { return this.state.user; }
 
   async updateProfile(input: UpdateProfileInput) {
     this.state.user = {
@@ -53,12 +51,18 @@ export class MockRepository implements DataRepository {
     return { message: 'Correo demo actualizado.' };
   }
 
-  async changePassword(_input: ChangePasswordInput) {
-    return { message: 'Contraseña demo actualizada.' };
-  }
+  async changePassword(_input: ChangePasswordInput) { return { message: 'Contraseña demo actualizada.' }; }
 
-  async getMarket() {
-    return demoQuotes;
+  async getMarket() { return demoQuotes; }
+
+  async getMarketStatus() {
+    return {
+      open: true,
+      openTime: '09:30',
+      closeTime: '16:00',
+      currentTime: new Date().toISOString(),
+      closedDays: [0, 6],
+    };
   }
 
   async getMarketHistory(symbol: string, limit = 24) {
@@ -66,13 +70,9 @@ export class MockRepository implements DataRepository {
     return buildDemoHistory(quote, limit);
   }
 
-  async getPortfolio() {
-    return demoPortfolio;
-  }
+  async getPortfolio() { return demoPortfolio; }
 
-  async getOrders() {
-    return this.state.orders;
-  }
+  async getOrders() { return this.state.orders; }
 
   async createOrder(input: CreateOrderInput): Promise<OrderRecord> {
     const result = validateOrderInput(input);
@@ -87,13 +87,19 @@ export class MockRepository implements DataRepository {
     return order;
   }
 
-  async getTrades(limit = 20): Promise<TradeRecord[]> {
-    return this.state.trades.slice(0, limit);
+  async cancelOrder(id: string): Promise<OrderRecord> {
+    const order = this.state.orders.find((item) => item._id === id);
+    if (!order || order.status !== 'PENDING') {
+      throw new Error('No fue posible cancelar la orden.');
+    }
+    const cancelled = { ...order, status: 'CANCELLED' as const };
+    this.state.orders = this.state.orders.map((item) => (item._id === id ? cancelled : item));
+    return cancelled;
   }
 
-  async getCurrencyRate() {
-    return demoCurrencyRate;
-  }
+  async getTrades(limit = 20): Promise<TradeRecord[]> { return this.state.trades.slice(0, limit); }
+
+  async getCurrencyRate() { return demoCurrencyRate; }
 
   async getWatchlist() {
     return demoQuotes.filter((quote) => this.state.user.watchlist.includes(quote.symbol));
@@ -109,17 +115,11 @@ export class MockRepository implements DataRepository {
     return { watchlist: this.state.user.watchlist };
   }
 
-  async getFriends() {
-    return this.state.friends;
-  }
+  async getFriends() { return this.state.friends; }
 
-  async getFriendRequests() {
-    return this.state.requests;
-  }
+  async getFriendRequests() { return this.state.requests; }
 
-  async sendFriendRequest(userId: string) {
-    return { message: `Solicitud demo enviada a ${userId}.` };
-  }
+  async sendFriendRequest(userId: string) { return { message: `Solicitud demo enviada a ${userId}.` }; }
 
   async acceptFriendRequest(userId: string) {
     const request = this.state.requests.find((item) => item.from._id === userId);
@@ -140,7 +140,5 @@ export class MockRepository implements DataRepository {
     return { message: 'Amigo demo eliminado.' };
   }
 
-  async getConnectionStatus() {
-    return 'ok' as const;
-  }
+  async getConnectionStatus() { return 'ok' as const; }
 }

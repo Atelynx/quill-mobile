@@ -9,13 +9,14 @@ import { useTheme } from '../theme/ThemeContext';
 import type { ThemeTokens } from '../theme/palette';
 import { formatDateTime } from '../utils/dates';
 import { formatMoney } from '../utils/money';
+import { loadTradeHistoryData } from './screenDataLoaders';
 
 export const HistoryScreen = () => {
   const session = useAppSession();
   const layoutStyles = useLayoutStyles();
   const { theme } = useTheme();
   const styles = createStyles(theme);
-  const resource = useAsyncResource(() => session.repository.getTrades(20), [session.repository]);
+  const resource = useAsyncResource(() => loadTradeHistoryData(session.repository, 20), [session.repository]);
 
   return (
     <ScrollView
@@ -25,10 +26,10 @@ export const HistoryScreen = () => {
       <Text style={layoutStyles.title}>Historial</Text>
       <Text style={layoutStyles.subtitle}>Operaciones ejecutadas</Text>
       {resource.error ? <Text style={styles.error}>{resource.error}</Text> : null}
-      {resource.data?.length === 0 ? (
+      {resource.data?.trades.length === 0 ? (
         <EmptyState title="Sin operaciones" message="Las ejecuciones confirmadas aparecerán aquí." />
       ) : (
-        resource.data?.map((trade) => (
+        resource.data?.trades.map((trade) => (
           <Card key={trade._id}>
             <View style={layoutStyles.row}>
               <View>

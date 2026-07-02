@@ -27,8 +27,11 @@ export const WatchlistPanel = () => {
       return;
     }
     await mutate(async () => {
-      await session.repository.addToWatchlist([symbol]);
+      const result = await session.repository.addToWatchlist([symbol.trim().toUpperCase()]);
       setSymbol('');
+      if (session.session?.user) {
+        await session.updateSessionUser({ ...session.session.user, watchlist: result.watchlist });
+      }
       await resource.refresh();
       return 'Símbolo agregado al seguimiento.';
     });
@@ -36,7 +39,10 @@ export const WatchlistPanel = () => {
 
   const removeSymbol = async (value: string) => {
     await mutate(async () => {
-      await session.repository.removeFromWatchlist(value);
+      const result = await session.repository.removeFromWatchlist(value);
+      if (session.session?.user) {
+        await session.updateSessionUser({ ...session.session.user, watchlist: result.watchlist });
+      }
       await resource.refresh();
       return 'Símbolo quitado del seguimiento.';
     });
@@ -66,7 +72,9 @@ export const WatchlistPanel = () => {
           <Text style={styles.buttonText}>Seguir</Text>
         </Pressable>
       </View>
+      <Text style={styles.hint}>Usa símbolos exactos del mercado, por ejemplo AAPL.US o COPEC.SN.</Text>
       {resource.error ? <Text style={styles.error}>{resource.error}</Text> : null}
+      {resource.loading ? <Text style={styles.feedback}>Cargando watchlist...</Text> : null}
       {resource.data?.length === 0 ? <EmptyState title="Sin símbolos" message="Agrega activos desde Mercado." /> : null}
       {resource.data?.map((quote) => (
         <View key={quote.symbol} style={styles.item}>
@@ -105,5 +113,6 @@ const createStyles = (theme: ThemeTokens) => StyleSheet.create({
   remove: { backgroundColor: theme.surfaceMuted, borderRadius: 8, padding: 8 },
   removeText: { color: theme.danger, fontWeight: '700' },
   feedback: { color: theme.muted, marginTop: 10 },
+  hint: { color: theme.muted, fontSize: 12, marginTop: 8 },
   error: { color: theme.danger, marginTop: 10 },
 });

@@ -24,7 +24,13 @@ export const UserScreen = () => {
     () => session.repository.getConnectionStatus(),
     [session.repository],
   );
+  const profile = useAsyncResource(async () => {
+    const user = await session.repository.getProfile();
+    await session.updateSessionUser(user);
+    return user;
+  }, [session.repository]);
   const goHome = () => setSection('home');
+  const user = profile.data ?? session.session?.user;
 
   return (
     <ScrollView style={layoutStyles.screen}>
@@ -38,12 +44,14 @@ export const UserScreen = () => {
         mode={session.mode}
         message={status.data === 'ok' ? 'Origen disponible' : 'Origen sin respuesta'}
       />
-      {section === 'home' ? <UserHomeSection user={session.session?.user} onOpen={setSection} /> : null}
+      {profile.error ? <Text style={styles.error}>{profile.error}</Text> : null}
+      {section === 'home' ? <UserHomeSection user={user} onOpen={setSection} /> : null}
       {section === 'profile' ? (
         <>
           <UserSectionHeader title="Perfil" subtitle="Datos visibles de tu cuenta" onBack={goHome} />
-          <ProfileSummary user={session.session?.user} />
-          <ProfileEditCard />
+          {profile.loading ? <Text style={styles.muted}>Cargando perfil...</Text> : null}
+          <ProfileSummary user={user} />
+          <ProfileEditCard user={user} />
         </>
       ) : null}
       {section === 'settings' ? (
@@ -74,4 +82,6 @@ export const UserScreen = () => {
 const createStyles = (theme: ThemeTokens) => StyleSheet.create({
   button: { backgroundColor: theme.danger, borderRadius: 8, marginBottom: 24, padding: 14 },
   buttonText: { color: theme.surface, fontWeight: '700', textAlign: 'center' },
+  error: { color: theme.danger, marginVertical: 10 },
+  muted: { color: theme.muted, marginBottom: 10 },
 });

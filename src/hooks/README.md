@@ -3,6 +3,6 @@
 Contiene hooks reutilizables para pantallas.
 
 - `useAsyncResource.ts`: carga recursos asincrónicos con estados de carga, error y recarga manual.
-- `useMarketRealtime.ts`: mantiene cotizaciones y tasa `USDCLP` en vivo para modos backend, incluso con fallback demo habilitado.
+- `useMarketRealtime.ts`: mantiene cotizaciones y tasa `USDCLP` en vivo para modos backend, incluso con fallback demo habilitado; si Socket.IO falla, conserva recarga manual y datos REST.
 
 Las pantallas lo usan para consumir repositorios sin repetir manejo de errores.

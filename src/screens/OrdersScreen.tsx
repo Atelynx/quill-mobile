@@ -1,4 +1,5 @@
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Badge } from '../components/Badge';
 import { Card } from '../components/Card';
 import { EmptyState } from '../components/EmptyState';
@@ -11,24 +12,38 @@ import type { ThemeTokens } from '../theme/palette';
 import type { CreateOrderInput } from '../types/domain';
 import { formatDateTime } from '../utils/dates';
 import { formatMoney } from '../utils/money';
+import { loadOrdersMarketData } from './screenDataLoaders';
 
 export const OrdersScreen = () => {
   const session = useAppSession();
   const layoutStyles = useLayoutStyles();
   const { theme } = useTheme();
   const styles = createStyles(theme);
+  const [cancelFeedback, setCancelFeedback] = useState<string>();
+  const [cancelingId, setCancelingId] = useState<string>();
   const resource = useAsyncResource(() => session.repository.getOrders(), [session.repository]);
-  const market = useAsyncResource(async () => {
-    const [quotes, rate] = await Promise.all([
-      session.repository.getMarket(),
-      session.repository.getCurrencyRate(),
-    ]);
-    return { quotes, rate };
-  }, [session.repository]);
+  const market = useAsyncResource(
+    () => loadOrdersMarketData(session.repository),
+    [session.repository],
+  );
 
   const createOrder = async (input: CreateOrderInput) => {
     await session.repository.createOrder(input);
     await resource.refresh();
+  };
+
+  const cancelOrder = async (id: string) => {
+    setCancelFeedback(undefined);
+    setCancelingId(id);
+    try {
+      await session.repository.cancelOrder(id);
+      setCancelFeedback('Orden cancelada correctamente.');
+      await resource.refresh();
+    } catch (error) {
+      setCancelFeedback(error instanceof Error ? error.message : 'No fue posible cancelar la orden.');
+    } finally {
+      setCancelingId(undefined);
+    }
   };
 
   return (
@@ -39,6 +54,8 @@ export const OrdersScreen = () => {
       <Text style={layoutStyles.title}>Órdenes</Text>
       <Text style={layoutStyles.subtitle}>Crea órdenes LIMIT o MARKET</Text>
       <Card>
+        {market.data?.rate.estimated ? <Text style={styles.warning}>{market.data.rate.message}</Text> : null}
+        {market.error ? <Text style={styles.error}>{market.error}</Text> : null}
         <OrderForm
           onSubmit={createOrder}
           quotes={market.data?.quotes ?? []}
@@ -47,6 +64,7 @@ export const OrdersScreen = () => {
       </Card>
       <Text style={layoutStyles.sectionTitle}>Órdenes recientes</Text>
       {resource.error ? <Text style={styles.error}>{resource.error}</Text> : null}
+      {cancelFeedback ? <Text style={styles.warning}>{cancelFeedback}</Text> : null}
       {resource.data?.length === 0 ? (
         <EmptyState title="Sin órdenes" message="Las órdenes creadas aparecerán aquí." />
       ) : (
@@ -62,6 +80,17 @@ export const OrdersScreen = () => {
                 <Badge label={order.side} tone={order.side === 'BUY' ? 'success' : 'danger'} />
                 <Badge label={order.status} tone={order.status === 'PENDING' ? 'warning' : 'neutral'} />
                 {order.limitPrice ? <Text style={styles.price}>{formatMoney(order.limitPrice, 'CLP')}</Text> : null}
+                {order.status === 'PENDING' ? (
+                  <Pressable
+                    disabled={cancelingId === order._id}
+                    onPress={() => void cancelOrder(order._id)}
+                    style={styles.cancelButton}
+                  >
+                    <Text style={styles.cancelText}>
+                      {cancelingId === order._id ? 'Cancelando...' : 'Cancelar'}
+                    </Text>
+                  </Pressable>
+                ) : null}
               </View>
             </View>
           </Card>
@@ -77,4 +106,13 @@ const createStyles = (theme: ThemeTokens) => StyleSheet.create({
   right: { alignItems: 'flex-end', gap: 5 },
   price: { color: theme.text, fontWeight: '700' },
   error: { color: theme.danger, marginVertical: 10 },
+  warning: { color: theme.warning, marginBottom: 10 },
+  cancelButton: {
+    borderColor: theme.danger,
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  cancelText: { color: theme.danger, fontWeight: '700' },
 });

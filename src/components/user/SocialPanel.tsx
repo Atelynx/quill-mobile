@@ -12,6 +12,7 @@ export const SocialPanel = () => {
   const { theme } = useTheme();
   const styles = createStyles(theme);
   const [query, setQuery] = useState('');
+  const [requestUserId, setRequestUserId] = useState('');
   const [feedback, setFeedback] = useState<string>();
   const resource = useAsyncResource(async () => ({
     friends: await session.repository.getFriends(),
@@ -24,13 +25,13 @@ export const SocialPanel = () => {
   );
 
   const sendRequest = async () => {
-    if (!query.trim()) {
+    if (!requestUserId.trim()) {
       setFeedback('Ingresa un ID de usuario para enviar solicitud.');
       return;
     }
     await mutate(async () => {
-      const response = await session.repository.sendFriendRequest(query.trim());
-      setQuery('');
+      const response = await session.repository.sendFriendRequest(requestUserId.trim());
+      setRequestUserId('');
       return response.message;
     });
   };
@@ -64,17 +65,14 @@ export const SocialPanel = () => {
   return (
     <Card>
       <Text style={styles.section}>Amigos</Text>
-      <TextInput
-        value={query}
-        onChangeText={setQuery}
-        autoCapitalize="none"
-        placeholder="ID, email o username"
-        placeholderTextColor={theme.muted}
-        style={styles.input}
-      />
+      <Text style={styles.hint}>La búsqueda global por email o username no está disponible; para enviar una solicitud usa un ID conocido.</Text>
+      <TextInput value={query} onChangeText={setQuery} autoCapitalize="none" placeholder="Filtrar amigos" placeholderTextColor={theme.muted} style={styles.input} />
+      <TextInput value={requestUserId} onChangeText={setRequestUserId} autoCapitalize="none" placeholder="ID de usuario para solicitud" placeholderTextColor={theme.muted} style={styles.input} />
       <Pressable accessibilityRole="button" onPress={() => void sendRequest()} style={styles.button}>
         <Text style={styles.buttonText}>Enviar solicitud</Text>
       </Pressable>
+      {resource.loading ? <Text style={styles.feedback}>Cargando amigos...</Text> : null}
+      {resource.error ? <Text style={styles.error}>{resource.error}</Text> : null}
       <Text style={styles.subsection}>Solicitudes</Text>
       {requests.length === 0 ? <EmptyState title="Sin solicitudes" message="No hay solicitudes pendientes." /> : null}
       {requests.map((request) => (
@@ -94,7 +92,6 @@ export const SocialPanel = () => {
           <MiniButton label="Quitar" onPress={() => void removeFriend(friend._id)} danger />
         </View>
       ))}
-      {resource.error ? <Text style={styles.error}>{resource.error}</Text> : null}
       {feedback ? <Text style={styles.feedback}>{feedback}</Text> : null}
     </Card>
   );
@@ -142,5 +139,6 @@ const createStyles = (theme: ThemeTokens) => StyleSheet.create({
   miniText: { color: theme.primary, fontWeight: '700' },
   danger: { color: theme.danger },
   feedback: { color: theme.muted, marginTop: 10 },
+  hint: { color: theme.muted, fontSize: 12, marginBottom: 8 },
   error: { color: theme.danger, marginTop: 10 },
 });

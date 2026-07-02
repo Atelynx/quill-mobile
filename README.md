@@ -59,11 +59,35 @@ EXPO_PUBLIC_SOCKET_URL=http://10.0.2.2:3000/realtime
 
 En Android físico usa la IP LAN del computador. El backend debe estar levantado y permitir CORS para Expo.
 
+Para ejecutar contra Railway sin modificar `.env` ni `.env.example`, usa variables inline:
+
+```bash
+EXPO_PUBLIC_USE_MOCKS=false \
+EXPO_PUBLIC_FALLBACK_TO_MOCKS=false \
+EXPO_PUBLIC_API_BASE_URL=https://quill-backend-production-70a1.up.railway.app/api \
+EXPO_PUBLIC_SOCKET_URL=https://quill-backend-production-70a1.up.railway.app/realtime \
+npm start
+```
+
+`EXPO_PUBLIC_SOCKET_URL` debe incluir la ruta `/realtime`. No subas valores locales, tokens ni secretos a archivos versionados.
+
+Realtime usa Socket.IO contra el namespace configurado en `EXPO_PUBLIC_SOCKET_URL`. Para Railway el valor esperado es `https://quill-backend-production-70a1.up.railway.app/realtime`; la app no agrega el namespace automáticamente. Si el socket no conecta, Mercado mantiene datos REST y muestra recarga manual disponible.
+
 Registro usa `POST /api/auth/register` con `fullName`, `email`, `password` y `username` opcional. Tras crear cuenta, la app vuelve al login para iniciar sesión manualmente, que coincide con el contrato actual del backend.
+
+Mercado usa `GET /api/market/status`, `GET /api/market/stocks` y `GET /api/market/stocks/:symbol/history?limit=24`. Si el estado de mercado falla, las cotizaciones e historial siguen cargando por REST.
+
+Órdenes usa `GET /api/orders?status=PENDING`, `POST /api/orders` y `PATCH /api/orders/:id/cancel`. La cancelación solo se muestra para órdenes pendientes y recarga el listado al terminar.
+
+Portafolio usa `GET /api/portfolio/summary`. Historial usa `GET /api/trades?limit=20` y muestra estado vacío cuando no hay ejecuciones confirmadas.
 
 Perfil usa `GET/PATCH /api/users/me`, `PATCH /api/users/me/email` y `PATCH /api/users/me/password`. Watchlist usa `GET/POST /api/users/me/watchlist` y `DELETE /api/users/me/watchlist/:symbol`. Amigos usa `GET /api/users/me/friends`, `GET /api/users/me/friends/requests`, `POST/PATCH/DELETE /api/users/me/friends/:userId`.
 
+La pantalla Usuario refresca el perfil real al entrar, conserva la sesión persistida al editar datos y muestra estados de carga, vacío, éxito y error en perfil, credenciales, watchlist y amigos. No existe búsqueda global confirmada de usuarios; el envío de solicitud requiere un `userId` conocido.
+
 Fuera de producción, `EXPO_PUBLIC_FALLBACK_TO_MOCKS=true` habilita un respaldo demo visible solo para mercado, historial y tasa `USDCLP` ante fallos de transporte. Respuestas HTTP, perfil, portafolio, órdenes, trades, watchlist, acciones sociales y cualquier mutación siempre propagan el error real.
+
+Si el backend real responde `404` o no entrega `USDCLP`, Mercado, Portafolio y Órdenes usan temporalmente una tasa estimada de 950 CLP/USD. La app muestra la advertencia “Usando tasa estimada.” para que la conversión no parezca un dato real confirmado. Para verificar si Railway ya entrega tasa real, revisa `GET https://quill-backend-production-70a1.up.railway.app/api/currency/rates/USDCLP`.
 
 En producción el fallback queda deshabilitado aunque se solicite. Si se usa backend, `EXPO_PUBLIC_API_BASE_URL` y `EXPO_PUBLIC_SOCKET_URL` son obligatorias; su ausencia detiene el inicio con un error claro.
 
@@ -110,10 +134,11 @@ GitHub Actions ejecuta automáticamente `npm ci`, typecheck, tests y lint en cad
 
 - La sesión se guarda con `expo-secure-store`; no se guardan credenciales ni contraseñas.
 - Realtime está integrado en Mercado para modo backend y mantiene recarga manual como fallback si el socket falla.
-- Las conversiones CLP/USD usan la tasa backend o una tasa demo únicamente en modos explícitos.
+- Las conversiones CLP/USD usan la tasa backend o una tasa estimada visible si el backend no entrega `USDCLP`.
 - Usuario usa navegación interna local para evitar una pantalla larga; no agrega tabs ni rutas nuevas.
 - La búsqueda global de usuarios por email/username queda pendiente porque no hay endpoint de búsqueda confirmado; la pantalla social permite operar con IDs conocidos y filtra localmente amigos existentes.
 - La compra por monto calcula `quantity` en mobile y envía el contrato existente de órdenes; no envía un campo `amount`.
+- La cancelación depende de que el backend acepte `PATCH /api/orders/:id/cancel`; si una orden ya no es cancelable, se muestra el error del backend.
 - El gráfico móvil usa una visualización nativa simple para Expo Go en vez de una librería pesada de charts.
 - La generación de APK con EAS requiere login y configuración externa.
 - `npm audit` mantiene vulnerabilidades moderadas transitivas de Expo/tooling; ver `docs/security-and-audit.md`.

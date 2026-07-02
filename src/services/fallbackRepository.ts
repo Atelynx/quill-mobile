@@ -41,6 +41,10 @@ export class FallbackRepository implements DataRepository {
     return this.safe((repo) => repo.getMarket());
   }
 
+  getMarketStatus() {
+    return this.safe((repo) => repo.getMarketStatus());
+  }
+
   getMarketHistory(symbol: string, limit?: number) {
     return this.safe((repo) => repo.getMarketHistory(symbol, limit));
   }
@@ -55,6 +59,10 @@ export class FallbackRepository implements DataRepository {
 
   createOrder(input: CreateOrderInput) {
     return this.primary.createOrder(input);
+  }
+
+  cancelOrder(id: string) {
+    return this.primary.cancelOrder(id);
   }
 
   getTrades(limit?: number) {

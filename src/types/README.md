@@ -2,7 +2,7 @@
 
 Contiene los tipos TypeScript compartidos por pantallas, servicios, mocks y utilidades.
 
-- `domain.ts`: define los contratos móviles alineados con backend y frontend: registro con `username`, usuario, watchlist, amigos, mercado, historial, portafolio, órdenes, operaciones y moneda.
+- `domain.ts`: define los contratos móviles alineados con backend y frontend: registro con `username`, usuario, watchlist, amigos, mercado, estado de mercado, historial, portafolio, órdenes, operaciones y moneda.
 - `env.d.ts`: declara `process.env` para variables públicas de Expo usadas por TypeScript y tests.
 
 Estos tipos conectan la capa de datos con los componentes visuales y evitan duplicar estructuras en cada pantalla.

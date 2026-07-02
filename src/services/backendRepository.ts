@@ -1,5 +1,5 @@
 import { HttpClient } from '../api/httpClient';
-import type { AuthSession, ChangeEmailInput, ChangePasswordInput, CreateOrderInput, CurrencyRate, Friend, FriendRequest, MessageResponse, OrderRecord, PricePoint, PortfolioSummary, RegisterInput, RegisterResult, StockQuote, TradeRecord, UpdateProfileInput, UserProfile, WatchlistResponse } from '../types/domain';
+import type { AuthSession, ChangeEmailInput, ChangePasswordInput, CreateOrderInput, CurrencyRate, Friend, FriendRequest, MarketStatus, MessageResponse, OrderRecord, PricePoint, PortfolioSummary, RegisterInput, RegisterResult, StockQuote, TradeRecord, UpdateProfileInput, UserProfile, WatchlistResponse } from '../types/domain';
 import type { DataRepository } from './contracts';
 import { validateOrderInput } from './orderValidation';
 import { validateRegisterInput } from './registerValidation';
@@ -25,9 +25,7 @@ export class BackendRepository implements DataRepository {
     });
   }
 
-  async getProfile(): Promise<UserProfile> {
-    return this.client.request<UserProfile>('/users/me');
-  }
+  async getProfile(): Promise<UserProfile> { return this.client.request<UserProfile>('/users/me'); }
 
   async updateProfile(input: UpdateProfileInput): Promise<UserProfile> {
     return this.client.request<UserProfile>('/users/me', {
@@ -50,9 +48,9 @@ export class BackendRepository implements DataRepository {
     });
   }
 
-  async getMarket(): Promise<StockQuote[]> {
-    return this.client.request<StockQuote[]>('/market/stocks');
-  }
+  async getMarket(): Promise<StockQuote[]> { return this.client.request<StockQuote[]>('/market/stocks'); }
+
+  async getMarketStatus(): Promise<MarketStatus> { return this.client.request<MarketStatus>('/market/status'); }
 
   async getMarketHistory(symbol: string, limit = 24): Promise<PricePoint[]> {
     return this.client.request<PricePoint[]>(
@@ -60,13 +58,9 @@ export class BackendRepository implements DataRepository {
     );
   }
 
-  async getPortfolio(): Promise<PortfolioSummary> {
-    return this.client.request<PortfolioSummary>('/portfolio/summary');
-  }
+  async getPortfolio(): Promise<PortfolioSummary> { return this.client.request<PortfolioSummary>('/portfolio/summary'); }
 
-  async getOrders(): Promise<OrderRecord[]> {
-    return this.client.request<OrderRecord[]>('/orders?status=PENDING');
-  }
+  async getOrders(): Promise<OrderRecord[]> { return this.client.request<OrderRecord[]>('/orders?status=PENDING'); }
 
   async createOrder(input: CreateOrderInput): Promise<OrderRecord | void> {
     const result = validateOrderInput(input);
@@ -79,17 +73,17 @@ export class BackendRepository implements DataRepository {
     });
   }
 
-  async getTrades(limit = 20): Promise<TradeRecord[]> {
-    return this.client.request<TradeRecord[]>(`/trades?limit=${limit}`);
+  async cancelOrder(id: string): Promise<OrderRecord> {
+    return this.client.request<OrderRecord>(`/orders/${encodeURIComponent(id)}/cancel`, {
+      method: 'PATCH',
+    });
   }
 
-  async getCurrencyRate(): Promise<CurrencyRate> {
-    return this.client.request<CurrencyRate>('/currency/rates/USDCLP');
-  }
+  async getTrades(limit = 20): Promise<TradeRecord[]> { return this.client.request<TradeRecord[]>(`/trades?limit=${limit}`); }
 
-  async getWatchlist(): Promise<StockQuote[]> {
-    return this.client.request<StockQuote[]>('/users/me/watchlist');
-  }
+  async getCurrencyRate(): Promise<CurrencyRate> { return this.client.request<CurrencyRate>('/currency/rates/USDCLP'); }
+
+  async getWatchlist(): Promise<StockQuote[]> { return this.client.request<StockQuote[]>('/users/me/watchlist'); }
 
   async addToWatchlist(symbols: string[]): Promise<WatchlistResponse> {
     return this.client.request<WatchlistResponse>('/users/me/watchlist', {
@@ -104,13 +98,9 @@ export class BackendRepository implements DataRepository {
     });
   }
 
-  async getFriends(): Promise<Friend[]> {
-    return this.client.request<Friend[]>('/users/me/friends');
-  }
+  async getFriends(): Promise<Friend[]> { return this.client.request<Friend[]>('/users/me/friends'); }
 
-  async getFriendRequests(): Promise<FriendRequest[]> {
-    return this.client.request<FriendRequest[]>('/users/me/friends/requests');
-  }
+  async getFriendRequests(): Promise<FriendRequest[]> { return this.client.request<FriendRequest[]>('/users/me/friends/requests'); }
 
   async sendFriendRequest(userId: string): Promise<MessageResponse> {
     return this.client.request<MessageResponse>(`/users/me/friends/${encodeURIComponent(userId)}`, {

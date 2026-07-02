@@ -1,18 +1,23 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput } from 'react-native';
 import { Card } from '../Card';
 import { useAppSession } from '../../state/AppSessionContext';
 import { useTheme } from '../../theme/ThemeContext';
 import type { ThemeTokens } from '../../theme/palette';
+import type { UserProfile } from '../../types/domain';
 
-export const ProfileEditCard = () => {
+export const ProfileEditCard = ({ user }: { user?: UserProfile }) => {
   const session = useAppSession();
   const { theme } = useTheme();
   const styles = createStyles(theme);
-  const user = session.session?.user;
   const [fullName, setFullName] = useState(user?.fullName ?? '');
   const [username, setUsername] = useState(user?.username ?? '');
   const [feedback, setFeedback] = useState<string>();
+
+  useEffect(() => {
+    setFullName(user?.fullName ?? '');
+    setUsername(user?.username ?? '');
+  }, [user?.fullName, user?.username]);
 
   const saveProfile = async () => {
     try {
