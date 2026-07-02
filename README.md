@@ -130,6 +130,8 @@ npm audit
 
 GitHub Actions ejecuta automáticamente `npm ci`, typecheck, tests y lint en cada push y pull request mediante el workflow `Mobile CI`. El workflow usa Node `20.19.4`, caché npm y un directorio `HOME` temporal escribible para Expo.
 
+Antes de generar APK, revisa `docs/pre-apk-checklist.md`. La app no hace auto-login, no restaura tokens antiguos y solo recuerda el último correo usado para prellenar Login; la contraseña siempre debe ingresarse manualmente.
+
 ## Limitaciones conocidas
 
 - La sesión se guarda con `expo-secure-store`; no se guardan credenciales ni contraseñas.
