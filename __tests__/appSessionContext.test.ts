@@ -94,4 +94,23 @@ describe('AppSessionProvider', () => {
     expect(screen.getByTestId('session').props.children).toBe('cerrada');
     await waitFor(() => expect(mockClearStoredSession).toHaveBeenCalled());
   });
+
+  it('observa y registra fallos de limpieza persistida', async () => {
+    const error = new Error('SecureStore no disponible');
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    mockClearStoredSession.mockRejectedValueOnce(error);
+    render(createElement(AppSessionProvider, null, createElement(SessionProbe)));
+    await waitFor(() => expect(screen.getByTestId('session').props.children).toBe('cerrada'));
+    fireEvent.press(screen.getByTestId('login'));
+    await waitFor(() => expect(screen.getByTestId('session').props.children).toBe('user-1'));
+
+    fireEvent.press(screen.getByTestId('logout'));
+
+    await waitFor(() => expect(consoleError).toHaveBeenCalledWith(
+      'No fue posible eliminar la sesión persistida.',
+      error,
+    ));
+    expect(screen.getByTestId('session').props.children).toBe('cerrada');
+    consoleError.mockRestore();
+  });
 });
