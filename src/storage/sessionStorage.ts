@@ -2,34 +2,25 @@ import * as SecureStore from 'expo-secure-store';
 import type { AuthSession } from '../types/domain';
 
 const SESSION_KEY = 'quill_mobile_session';
+const LAST_EMAIL_KEY = 'quill_mobile_last_email';
 
 export const saveStoredSession = async (session: AuthSession) => {
-  await SecureStore.setItemAsync(SESSION_KEY, JSON.stringify(session));
+  await saveLastEmail(session.user.email);
 };
 
 export const loadStoredSession = async (): Promise<AuthSession | undefined> => {
-  const raw = await SecureStore.getItemAsync(SESSION_KEY);
-  if (!raw) {
-    return undefined;
-  }
-
-  try {
-    return normalizeSession(JSON.parse(raw) as AuthSession);
-  } catch {
-    await clearStoredSession();
-    return undefined;
-  }
+  await clearStoredSession();
+  return undefined;
 };
 
 export const clearStoredSession = async () => {
   await SecureStore.deleteItemAsync(SESSION_KEY);
 };
 
-const normalizeSession = (session: AuthSession): AuthSession => ({
-  ...session,
-  user: {
-    ...session.user,
-    username: session.user.username ?? null,
-    watchlist: session.user.watchlist ?? [],
-  },
-});
+export const saveLastEmail = async (email: string) => {
+  await SecureStore.setItemAsync(LAST_EMAIL_KEY, email.trim().toLowerCase());
+};
+
+export const loadLastEmail = async () => {
+  return (await SecureStore.getItemAsync(LAST_EMAIL_KEY)) ?? '';
+};

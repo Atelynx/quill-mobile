@@ -6,11 +6,25 @@ import { AppSessionProvider, useAppSession } from '../src/state/AppSessionContex
 
 const mockClearStoredSession = jest.fn<Promise<void>, []>();
 const mockLoadStoredSession = jest.fn<Promise<AuthSession | undefined>, []>();
+const mockLoadLastEmail = jest.fn<Promise<string>, []>();
+const mockSaveLastEmail = jest.fn<Promise<void>, [string]>();
+const mockLogin = jest.fn<Promise<AuthSession>, [string, string]>();
 
 jest.mock('../src/storage/sessionStorage', () => ({
   clearStoredSession: () => mockClearStoredSession(),
+  loadLastEmail: () => mockLoadLastEmail(),
   loadStoredSession: () => mockLoadStoredSession(),
-  saveStoredSession: jest.fn(() => Promise.resolve()),
+  saveLastEmail: (email: string) => mockSaveLastEmail(email),
+}));
+
+jest.mock('../src/services/repositoryFactory', () => ({
+  createRepositoryBundle: () => ({
+    mode: 'backend',
+    repository: {
+      login: (email: string, password: string) => mockLogin(email, password),
+      register: jest.fn(),
+    },
+  }),
 }));
 
 const session: AuthSession = {
@@ -27,46 +41,68 @@ const session: AuthSession = {
 };
 
 const SessionProbe = () => {
-  const { logout, session: currentSession } = useAppSession();
+  const context = useAppSession();
   return createElement(
     Pressable,
-    { onPress: logout, testID: 'logout' },
-    createElement(Text, { testID: 'session' }, currentSession?.user.id ?? 'cerrada'),
+    { onPress: context.logout, testID: 'logout' },
+    createElement(Text, { testID: 'session' }, context.session?.user.id ?? 'cerrada'),
+    createElement(Text, { testID: 'email' }, context.lastEmail),
+    createElement(
+      Pressable,
+      { onPress: () => void context.login('demo@quill.cl', 'Manual123!'), testID: 'login' },
+      createElement(Text, null, 'login'),
+    ),
   );
 };
 
-const renderSession = async () => {
-  render(createElement(AppSessionProvider, null, createElement(SessionProbe)));
-  await waitFor(() => expect(screen.getByTestId('session').props.children).toBe('user-1'));
-};
-
-describe('AppSessionProvider logout', () => {
+describe('AppSessionProvider', () => {
   beforeEach(() => {
     mockClearStoredSession.mockReset().mockResolvedValue();
     mockLoadStoredSession.mockReset().mockResolvedValue(session);
+    mockLoadLastEmail.mockReset().mockResolvedValue('demo@quill.cl');
+    mockSaveLastEmail.mockReset().mockResolvedValue();
+    mockLogin.mockReset().mockResolvedValue(session);
   });
 
-  it('limpia la sesión persistida al cerrar sesión', async () => {
-    await renderSession();
+  it('no hace auto-login con una sesión persistida', async () => {
+    render(createElement(AppSessionProvider, null, createElement(SessionProbe)));
 
-    fireEvent.press(screen.getByTestId('logout'));
+    await waitFor(() => expect(screen.getByTestId('email').props.children).toBe('demo@quill.cl'));
 
-    await waitFor(() => expect(mockClearStoredSession).toHaveBeenCalledTimes(1));
+    expect(screen.getByTestId('session').props.children).toBe('cerrada');
+    expect(mockLoadStoredSession).toHaveBeenCalledTimes(1);
   });
 
-  it('limpia la sesión en memoria inmediatamente', async () => {
-    await renderSession();
+  it('activa sesión solo después de login manual exitoso', async () => {
+    render(createElement(AppSessionProvider, null, createElement(SessionProbe)));
+    await waitFor(() => expect(screen.getByTestId('session').props.children).toBe('cerrada'));
+
+    fireEvent.press(screen.getByTestId('login'));
+
+    await waitFor(() => expect(screen.getByTestId('session').props.children).toBe('user-1'));
+    expect(mockSaveLastEmail).toHaveBeenCalledWith('demo@quill.cl');
+  });
+
+  it('logout vuelve a sesión cerrada y limpia sesión antigua', async () => {
+    render(createElement(AppSessionProvider, null, createElement(SessionProbe)));
+    await waitFor(() => expect(screen.getByTestId('session').props.children).toBe('cerrada'));
+    fireEvent.press(screen.getByTestId('login'));
+    await waitFor(() => expect(screen.getByTestId('session').props.children).toBe('user-1'));
 
     fireEvent.press(screen.getByTestId('logout'));
 
     expect(screen.getByTestId('session').props.children).toBe('cerrada');
+    await waitFor(() => expect(mockClearStoredSession).toHaveBeenCalled());
   });
 
   it('observa y registra fallos de limpieza persistida', async () => {
     const error = new Error('SecureStore no disponible');
     const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined);
     mockClearStoredSession.mockRejectedValueOnce(error);
-    await renderSession();
+    render(createElement(AppSessionProvider, null, createElement(SessionProbe)));
+    await waitFor(() => expect(screen.getByTestId('session').props.children).toBe('cerrada'));
+    fireEvent.press(screen.getByTestId('login'));
+    await waitFor(() => expect(screen.getByTestId('session').props.children).toBe('user-1'));
 
     fireEvent.press(screen.getByTestId('logout'));
 

@@ -3,7 +3,7 @@ import type { PropsWithChildren } from 'react';
 import type { DataMode } from '../config/env';
 import type { DataRepository } from '../services/contracts';
 import { createRepositoryBundle } from '../services/repositoryFactory';
-import { clearStoredSession, loadStoredSession, saveStoredSession } from '../storage/sessionStorage';
+import { clearStoredSession, loadLastEmail, loadStoredSession, saveLastEmail } from '../storage/sessionStorage';
 import type { AuthSession, CurrencyCode, RegisterInput, RegisterResult, UserProfile } from '../types/domain';
 
 interface AppSessionValue {
@@ -12,6 +12,7 @@ interface AppSessionValue {
   repository: DataRepository;
   accessToken?: string;
   hydrating: boolean;
+  lastEmail: string;
   preferredCurrency: CurrencyCode;
   setPreferredCurrency: (currency: CurrencyCode) => void;
   login: (email: string, password: string) => Promise<void>;
@@ -25,6 +26,7 @@ const AppSessionContext = createContext<AppSessionValue | null>(null);
 export const AppSessionProvider = ({ children }: PropsWithChildren) => {
   const [session, setSession] = useState<AuthSession>();
   const [hydrating, setHydrating] = useState(true);
+  const [lastEmail, setLastEmail] = useState('');
   const [preferredCurrency, setPreferredCurrency] = useState<CurrencyCode>('CLP');
   const tokenRef = useRef<string | undefined>(undefined);
   const closeSession = useCallback(() => {
@@ -41,11 +43,8 @@ export const AppSessionProvider = ({ children }: PropsWithChildren) => {
 
   useEffect(() => {
     const restoreSession = async () => {
-      const storedSession = await loadStoredSession();
-      if (storedSession) {
-        tokenRef.current = storedSession.accessToken;
-        setSession(storedSession);
-      }
+      await loadStoredSession();
+      setLastEmail(await loadLastEmail());
       setHydrating(false);
     };
     void restoreSession();
@@ -56,7 +55,8 @@ export const AppSessionProvider = ({ children }: PropsWithChildren) => {
     const nextSession = { ...response, user: normalizeUser(response.user) };
     tokenRef.current = nextSession.accessToken;
     setSession(nextSession);
-    await saveStoredSession(nextSession);
+    setLastEmail(nextSession.user.email);
+    await saveLastEmail(nextSession.user.email);
   };
 
   const register = (input: RegisterInput) => bundle.repository.register(input);
@@ -67,7 +67,6 @@ export const AppSessionProvider = ({ children }: PropsWithChildren) => {
     }
     const nextSession = { ...session, user: normalizeUser(user) };
     setSession(nextSession);
-    await saveStoredSession(nextSession);
   };
 
   return (
@@ -78,6 +77,7 @@ export const AppSessionProvider = ({ children }: PropsWithChildren) => {
         repository: bundle.repository,
         accessToken: tokenRef.current,
         hydrating,
+        lastEmail,
         preferredCurrency,
         setPreferredCurrency,
         login,
