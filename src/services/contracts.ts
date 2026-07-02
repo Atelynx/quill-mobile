@@ -6,6 +6,7 @@ import type {
   CurrencyRate,
   Friend,
   FriendRequest,
+  MarketStatus,
   MessageResponse,
   OrderRecord,
   PricePoint,
@@ -27,10 +28,12 @@ export interface DataRepository {
   changeEmail(input: ChangeEmailInput): Promise<MessageResponse | void>;
   changePassword(input: ChangePasswordInput): Promise<MessageResponse | void>;
   getMarket(): Promise<StockQuote[]>;
+  getMarketStatus(): Promise<MarketStatus>;
   getMarketHistory(symbol: string, limit?: number): Promise<PricePoint[]>;
   getPortfolio(): Promise<PortfolioSummary>;
   getOrders(): Promise<OrderRecord[]>;
   createOrder(input: CreateOrderInput): Promise<OrderRecord | void>;
+  cancelOrder(id: string): Promise<OrderRecord>;
   getTrades(limit?: number): Promise<TradeRecord[]>;
   getCurrencyRate(): Promise<CurrencyRate>;
   getWatchlist(): Promise<StockQuote[]>;

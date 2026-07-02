@@ -5,7 +5,7 @@ Contiene componentes visuales reutilizables.
 - `Card.tsx`: contenedor de contenido con borde y espaciado.
 - `Badge.tsx`: etiqueta de estado para variaciones, lados y órdenes.
 - `EmptyState.tsx`: estado vacío reutilizable.
-- `StatusBanner.tsx`: indica modo mock o backend real.
+- `StatusBanner.tsx`: indica backend, demo o backend con respaldo demo visible.
 - `CurrencySwitch.tsx`: cambia moneda de visualización.
 - `ThemeSelector.tsx`: permite cambiar entre temas claro, oscuro y océano.
 - `SegmentedControl.tsx`: selector compacto para modos mutuamente excluyentes como lado, tipo de orden o compra por monto.

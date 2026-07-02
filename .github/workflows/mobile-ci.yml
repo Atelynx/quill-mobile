@@ -1,0 +1,44 @@
+name: Mobile CI
+
+on:
+  pull_request:
+  push:
+
+permissions:
+  contents: read
+
+env:
+  CI: 'true'
+
+jobs:
+  validate:
+    name: Typecheck, tests and lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Prepare writable Expo home
+        run: mkdir -p "${{ runner.temp }}/quill-mobile-home"
+
+      - name: Lint
+        run: npm run lint
+        env:
+          HOME: ${{ runner.temp }}/quill-mobile-home

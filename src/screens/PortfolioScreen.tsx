@@ -8,19 +8,17 @@ import { useTheme } from '../theme/ThemeContext';
 import type { ThemeTokens } from '../theme/palette';
 import type { CurrencyCode } from '../types/domain';
 import { convertMoney, formatMoney } from '../utils/money';
+import { loadPortfolioScreenData } from './screenDataLoaders';
 
 export const PortfolioScreen = () => {
   const session = useAppSession();
   const layoutStyles = useLayoutStyles();
   const { theme } = useTheme();
   const styles = createStyles(theme);
-  const resource = useAsyncResource(async () => {
-    const [portfolio, rate] = await Promise.all([
-      session.repository.getPortfolio(),
-      session.repository.getCurrencyRate(),
-    ]);
-    return { portfolio, rate };
-  }, [session.repository]);
+  const resource = useAsyncResource(
+    () => loadPortfolioScreenData(session.repository),
+    [session.repository],
+  );
 
   const rate = resource.data?.rate.rate ?? 1;
   const portfolio = resource.data?.portfolio;
@@ -34,7 +32,7 @@ export const PortfolioScreen = () => {
     >
       <Text style={layoutStyles.title}>Portafolio</Text>
       <Text style={layoutStyles.subtitle}>Balance, posiciones y resultado no realizado</Text>
-      {resource.data?.rate.estimated ? <Text style={styles.warning}>Usando tasa estimada USDCLP.</Text> : null}
+      {resource.data?.rate.estimated ? <Text style={styles.warning}>{resource.data.rate.message}</Text> : null}
       {resource.error ? <Text style={styles.error}>{resource.error}</Text> : null}
       {portfolio ? (
         <>

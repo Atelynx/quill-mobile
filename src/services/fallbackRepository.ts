@@ -22,7 +22,7 @@ export class FallbackRepository implements DataRepository {
   }
 
   getProfile() {
-    return this.safe((repo) => repo.getProfile());
+    return this.primary.getProfile();
   }
 
   updateProfile(input: UpdateProfileInput) {
@@ -41,24 +41,32 @@ export class FallbackRepository implements DataRepository {
     return this.safe((repo) => repo.getMarket());
   }
 
+  getMarketStatus() {
+    return this.safe((repo) => repo.getMarketStatus());
+  }
+
   getMarketHistory(symbol: string, limit?: number) {
     return this.safe((repo) => repo.getMarketHistory(symbol, limit));
   }
 
   getPortfolio() {
-    return this.safe((repo) => repo.getPortfolio());
+    return this.primary.getPortfolio();
   }
 
   getOrders() {
-    return this.safe((repo) => repo.getOrders());
+    return this.primary.getOrders();
   }
 
   createOrder(input: CreateOrderInput) {
     return this.primary.createOrder(input);
   }
 
+  cancelOrder(id: string) {
+    return this.primary.cancelOrder(id);
+  }
+
   getTrades(limit?: number) {
-    return this.safe((repo) => repo.getTrades(limit));
+    return this.primary.getTrades(limit);
   }
 
   getCurrencyRate() {
@@ -66,39 +74,39 @@ export class FallbackRepository implements DataRepository {
   }
 
   getWatchlist() {
-    return this.safe((repo) => repo.getWatchlist());
+    return this.primary.getWatchlist();
   }
 
   addToWatchlist(symbols: string[]) {
-    return this.safe((repo) => repo.addToWatchlist(symbols));
+    return this.primary.addToWatchlist(symbols);
   }
 
   removeFromWatchlist(symbol: string) {
-    return this.safe((repo) => repo.removeFromWatchlist(symbol));
+    return this.primary.removeFromWatchlist(symbol);
   }
 
   getFriends() {
-    return this.safe((repo) => repo.getFriends());
+    return this.primary.getFriends();
   }
 
   getFriendRequests() {
-    return this.safe((repo) => repo.getFriendRequests());
+    return this.primary.getFriendRequests();
   }
 
   sendFriendRequest(userId: string) {
-    return this.safe((repo) => repo.sendFriendRequest(userId));
+    return this.primary.sendFriendRequest(userId);
   }
 
   acceptFriendRequest(userId: string) {
-    return this.safe((repo) => repo.acceptFriendRequest(userId));
+    return this.primary.acceptFriendRequest(userId);
   }
 
   rejectFriendRequest(userId: string) {
-    return this.safe((repo) => repo.rejectFriendRequest(userId));
+    return this.primary.rejectFriendRequest(userId);
   }
 
   removeFriend(userId: string) {
-    return this.safe((repo) => repo.removeFriend(userId));
+    return this.primary.removeFriend(userId);
   }
 
   getConnectionStatus() {
@@ -108,7 +116,10 @@ export class FallbackRepository implements DataRepository {
   private async safe<T>(action: (repo: DataRepository) => Promise<T>): Promise<T> {
     try {
       return await action(this.primary);
-    } catch {
+    } catch (error) {
+      if (!(error instanceof TypeError)) {
+        throw error;
+      }
       return action(this.fallback);
     }
   }

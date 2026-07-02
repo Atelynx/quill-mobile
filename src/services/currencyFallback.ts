@@ -8,5 +8,5 @@ export const estimatedUsdClpRate = (): CurrencyRate => ({
   basePrice: ESTIMATED_USDCLP_RATE,
   dayChangePercentage: 0,
   estimated: true,
-  message: 'Usando tasa estimada porque el backend no entregó USDCLP.',
+  message: 'Usando tasa estimada.',
 });

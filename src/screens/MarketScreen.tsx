@@ -12,6 +12,7 @@ import { useLayoutStyles } from '../styles/layout';
 import { useTheme } from '../theme/ThemeContext';
 import { convertHistoryCurrency } from '../utils/history';
 import { formatMoney } from '../utils/money';
+import { loadMarketScreenData } from './screenDataLoaders';
 
 export const MarketScreen = () => {
   const session = useAppSession();
@@ -22,13 +23,10 @@ export const MarketScreen = () => {
   const [watchlist, setWatchlist] = useState(session.session?.user.watchlist ?? []);
   const [watchFeedback, setWatchFeedback] = useState<string>();
   const { liveQuotes, liveRate, setLiveQuotes, setLiveRate, socketStatus } = useMarketRealtime(session);
-  const resource = useAsyncResource(async () => {
-    const [market, rate] = await Promise.all([
-      session.repository.getMarket(),
-      session.repository.getCurrencyRate(),
-    ]);
-    return { market, rate };
-  }, [session.repository]);
+  const resource = useAsyncResource(
+    () => loadMarketScreenData(session.repository),
+    [session.repository],
+  );
   const history = useAsyncResource(
     () => selectedSymbol ? session.repository.getMarketHistory(selectedSymbol, 24) : Promise.resolve([]),
     [session.repository, selectedSymbol],
@@ -62,6 +60,7 @@ export const MarketScreen = () => {
 
   const rate = liveRate?.rate ?? 1;
   const selectedQuote = liveQuotes.find((quote) => quote.symbol === selectedSymbol);
+  const marketStatus = resource.data?.status;
   const chartData = useMemo(
     () => convertHistoryCurrency(history.data ?? [], selectedQuote?.currency ?? 'CLP', session.preferredCurrency, rate),
     [history.data, rate, selectedQuote?.currency, session.preferredCurrency],
@@ -83,6 +82,12 @@ export const MarketScreen = () => {
         mode={session.mode}
         message={`USDCLP ${formatMoney(rate, 'CLP')}${rateMessage ? ' · Usando tasa estimada' : ''} · ${socketStatus}`}
       />
+      {marketStatus ? (
+        <Text style={marketStatus.open ? styles.success : styles.warning}>
+          Mercado {marketStatus.open ? 'abierto' : 'cerrado'} · {marketStatus.openTime}-{marketStatus.closeTime}
+        </Text>
+      ) : null}
+      {resource.data?.statusError ? <Text style={styles.warning}>{resource.data.statusError}</Text> : null}
       {rateMessage ? <Text style={styles.warning}>{rateMessage}</Text> : null}
       {resource.error ? <Text style={styles.error}>{resource.error}</Text> : null}
       {watchFeedback ? <Text style={styles.warning}>{watchFeedback}</Text> : null}
@@ -123,6 +128,7 @@ export const MarketScreen = () => {
 const createStyles = (theme: ReturnType<typeof useTheme>['theme']) => StyleSheet.create({
   name: { color: theme.muted, marginTop: 3 },
   error: { color: theme.danger, marginVertical: 10 },
+  success: { color: theme.success, marginBottom: 10 },
   warning: { color: theme.warning, marginBottom: 10 },
   symbolList: { marginBottom: 12, marginTop: 12 },
   symbolChip: {

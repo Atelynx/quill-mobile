@@ -13,10 +13,7 @@ export interface UserProfile {
   reservedBalance: number;
 }
 
-export interface AuthSession {
-  accessToken: string;
-  user: UserProfile;
-}
+export interface AuthSession { accessToken: string; user: UserProfile; }
 
 export interface RegisterInput {
   fullName: string;
@@ -31,10 +28,7 @@ export interface RegisterResult {
   username?: string;
 }
 
-export interface UpdateProfileInput {
-  fullName?: string;
-  username?: string;
-}
+export interface UpdateProfileInput { fullName?: string; username?: string; }
 
 export interface ChangeEmailInput {
   currentPassword: string;
@@ -46,9 +40,7 @@ export interface ChangePasswordInput {
   newPassword: string;
 }
 
-export interface WatchlistResponse {
-  watchlist: string[];
-}
+export interface WatchlistResponse { watchlist: string[]; }
 
 export interface Friend {
   _id: string;
@@ -64,9 +56,7 @@ export interface FriendRequest {
   createdAt: string;
 }
 
-export interface MessageResponse {
-  message: string;
-}
+export interface MessageResponse { message: string; }
 
 export interface StockQuote {
   symbol: string;
@@ -81,6 +71,14 @@ export interface PricePoint {
   symbol: string;
   price: number;
   createdAt: string;
+}
+
+export interface MarketStatus {
+  open: boolean;
+  openTime: string;
+  closeTime: string;
+  currentTime: string;
+  closedDays?: number[];
 }
 
 export interface PortfolioPosition {
