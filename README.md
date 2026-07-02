@@ -129,16 +129,3 @@ npm audit
 ```
 
 GitHub Actions ejecuta automáticamente `npm ci`, typecheck, tests y lint en cada push y pull request mediante el workflow `Mobile CI`. El workflow usa Node `20.19.4`, caché npm y un directorio `HOME` temporal escribible para Expo.
-
-## Limitaciones conocidas
-
-- La sesión se guarda con `expo-secure-store`; no se guardan credenciales ni contraseñas.
-- Realtime está integrado en Mercado para modo backend y mantiene recarga manual como fallback si el socket falla.
-- Las conversiones CLP/USD usan la tasa backend o una tasa estimada visible si el backend no entrega `USDCLP`.
-- Usuario usa navegación interna local para evitar una pantalla larga; no agrega tabs ni rutas nuevas.
-- La búsqueda global de usuarios por email/username queda pendiente porque no hay endpoint de búsqueda confirmado; la pantalla social permite operar con IDs conocidos y filtra localmente amigos existentes.
-- La compra por monto calcula `quantity` en mobile y envía el contrato existente de órdenes; no envía un campo `amount`.
-- La cancelación depende de que el backend acepte `PATCH /api/orders/:id/cancel`; si una orden ya no es cancelable, se muestra el error del backend.
-- El gráfico móvil usa una visualización nativa simple para Expo Go en vez de una librería pesada de charts.
-- La generación de APK con EAS requiere login y configuración externa.
-- `npm audit` mantiene vulnerabilidades moderadas transitivas de Expo/tooling; ver `docs/security-and-audit.md`.
