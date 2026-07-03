@@ -49,7 +49,15 @@ export const resolveAppConfig = (env: Record<string, string | undefined>): AppCo
   };
 };
 
-export const appConfig = resolveAppConfig(process.env);
+const runtimeEnv = {
+  NODE_ENV: process.env.NODE_ENV,
+  EXPO_PUBLIC_USE_MOCKS: process.env.EXPO_PUBLIC_USE_MOCKS,
+  EXPO_PUBLIC_FALLBACK_TO_MOCKS: process.env.EXPO_PUBLIC_FALLBACK_TO_MOCKS,
+  EXPO_PUBLIC_API_BASE_URL: process.env.EXPO_PUBLIC_API_BASE_URL,
+  EXPO_PUBLIC_SOCKET_URL: process.env.EXPO_PUBLIC_SOCKET_URL,
+};
+
+export const appConfig = resolveAppConfig(runtimeEnv);
 
 export const getDataMode = (config: AppConfig = appConfig): DataMode => {
   if (config.useMocks) {
