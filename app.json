@@ -24,7 +24,14 @@
       "bundler": "metro"
     },
     "plugins": [
-      "expo-router"
-    ]
+      "expo-router",
+      "expo-font"
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "2c825298-9940-4e26-b8f2-9fb335c66cbb"
+      }
+    }
   }
 }
